@@ -1,5 +1,5 @@
 import { emMinutos } from './formato'
-import type { Motorista, Servico } from '../types'
+import type { Motorista, Servico } from '../tipos'
 
 export type Disponibilidade =
   | { estado: 'livre' }
@@ -20,11 +20,11 @@ export function disponibilidadeDe(
     .filter(
       (s) =>
         s.id !== servico.id &&
-        s.motoristaId === motorista.id &&
-        s.data === servico.data &&
+        s.motorista_id === motorista.id &&
+        s.data.slice(0, 10) === servico.data.slice(0, 10) &&
         Math.abs(emMinutos(s.hora) - emMinutos(servico.hora)) < JANELA_EM_MINUTOS,
     )
     .sort((a, b) => emMinutos(a.hora) - emMinutos(b.hora))[0]
 
-  return conflito ? { estado: 'ocupado', hora: conflito.hora } : { estado: 'livre' }
+  return conflito ? { estado: 'ocupado', hora: conflito.hora.slice(0, 5) } : { estado: 'livre' }
 }

@@ -1,4 +1,4 @@
-import type { Motorista, Indicador, Servico, TipoServico } from '../types'
+import type { TipoServico } from '../tipos'
 
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
 const MESES = [
@@ -8,7 +8,7 @@ const MESES = [
 
 /** Monta a data ao meio-dia para o fuso horário nunca empurrar para o dia anterior. */
 export function comoData(iso: string): Date {
-  const [ano, mes, dia] = iso.split('-').map(Number)
+  const [ano, mes, dia] = iso.slice(0, 10).split('-').map(Number)
   return new Date(ano, mes - 1, dia, 12, 0, 0)
 }
 
@@ -30,8 +30,14 @@ export function dataPorExtenso(iso: string): string {
 
 /** "27/08" */
 export function dataCurta(iso: string): string {
-  const [, mes, dia] = iso.split('-')
+  const [, mes, dia] = iso.slice(0, 10).split('-')
   return `${dia}/${mes}`
+}
+
+/** "27/08/2026" */
+export function dataCompleta(iso: string): string {
+  const [ano, mes, dia] = iso.slice(0, 10).split('-')
+  return `${dia}/${mes}/${ano}`
 }
 
 /** "agosto de 2026" */
@@ -40,7 +46,6 @@ export function mesPorExtenso(mesISO: string): string {
   return `${MESES[mes - 1]} de ${ano}`
 }
 
-/** "2026-08-27" -> "2026-08" */
 export function mesDe(iso: string): string {
   return iso.slice(0, 7)
 }
@@ -55,8 +60,34 @@ export function mesVizinho(mesISO: string, passos: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-export function moeda(valor: number): string {
-  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+export function primeiroDiaDoMes(mesISO: string): string {
+  return `${mesISO}-01`
+}
+
+export function ultimoDiaDoMes(mesISO: string): string {
+  const [ano, mes] = mesISO.split('-').map(Number)
+  return paraISO(new Date(ano, mes, 0))
+}
+
+/** O banco devolve "14:20:00"; a tela mostra "14:20". */
+export function hora(valor: string): string {
+  return valor.slice(0, 5)
+}
+
+/** Recebe centavos e devolve "R$ 192,00". */
+export function moeda(centavos: number | null | undefined): string {
+  return ((centavos ?? 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+/** Recebe centavos e devolve "192,00", para digitar num campo. */
+export function emReais(centavos: number | null | undefined): string {
+  return ((centavos ?? 0) / 100).toFixed(2).replace('.', ',')
+}
+
+/** Recebe o que a pessoa digitou ("480", "480,50") e devolve centavos. */
+export function paraCentavos(texto: string): number {
+  const limpo = texto.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')
+  return Math.round((Number(limpo) || 0) * 100)
 }
 
 export function rotuloTipo(tipo: TipoServico): string {
@@ -65,23 +96,15 @@ export function rotuloTipo(tipo: TipoServico): string {
   return 'Passeio'
 }
 
-export function emMinutos(hora: string): number {
-  const [h, m] = hora.split(':').map(Number)
+export function emMinutos(valor: string): number {
+  const [h, m] = valor.slice(0, 5).split(':').map(Number)
   return h * 60 + m
 }
 
-function duasCasas(valor: number): number {
-  return Math.round(valor * 100) / 100
+export function pessoas(pax: number): string {
+  return pax === 1 ? '1 pessoa' : `${pax} pessoas`
 }
 
-export function valorDoMotorista(servico: Servico, motorista: Motorista): number {
-  return duasCasas((servico.valor * motorista.percentual) / 100)
-}
-
-export function comissaoDoIndicador(servico: Servico, indicador: Indicador): number {
-  return duasCasas((servico.valor * indicador.comissao) / 100)
-}
-
-export function novoId(): string {
-  return Math.random().toString(36).slice(2, 10)
+export function soNumeros(texto: string): string {
+  return texto.replace(/\D/g, '')
 }

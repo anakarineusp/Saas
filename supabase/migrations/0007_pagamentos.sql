@@ -101,7 +101,7 @@ begin
   if v_status = 'pago' then
     update public.assinaturas
        set status = 'ativa',
-           plano_id = coalesce(plano_id, 'essencial'),
+           plano_id = coalesce(plano_id, app.plano_do_valor(v_centavos), 'essencial'),
            proxima_cobranca = coalesce(v_vencimento, current_date) + interval '1 month',
            provedor = p_provedor,
            provedor_assinatura_id = coalesce(v_cobranca ->> 'subscription', provedor_assinatura_id),

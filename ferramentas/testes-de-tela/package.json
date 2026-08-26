@@ -1,0 +1,9 @@
+{
+  "name": "testes-de-tela",
+  "private": true,
+  "type": "module",
+  "description": "Abre o aplicativo num navegador de verdade e percorre o caminho inteiro: cadastro, planos, atribuição, WhatsApp, confirmação do motorista, acerto e painel da administração.",
+  "dependencies": {
+    "playwright": "^1.62.1"
+  }
+}

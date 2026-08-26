@@ -135,6 +135,31 @@ begin;
 commit;
 
 \echo ''
+\echo '— Pagamento que chega sem plano escolhido'
+begin;
+  set local role postgres;
+  insert into auth.users (id, email) values
+    ('55555555-5555-5555-5555-555555555555', 'paulo@canelatransfer.com.br') on conflict do nothing;
+commit;
+
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555"}';
+  select public.criar_empresa('Canela Transfer', 'Paulo Bertoldo') as empresa2 \gset
+commit;
+
+begin;
+  set local role postgres;
+  select public.processar_evento_pagamento('asaas', jsonb_build_object(
+    'id', 'evt_010', 'event', 'PAYMENT_CONFIRMED',
+    'payment', jsonb_build_object('id', 'pay_010', 'value', 349.00, 'billingType', 'CREDIT_CARD',
+      'paymentDate', to_char(current_date, 'YYYY-MM-DD'), 'externalReference', :'empresa2')));
+
+  select testes.confere((select plano_id from public.assinaturas where empresa_id = :'empresa2') = 'frota',
+                        'o plano foi descoberto pelo valor pago (R$ 349,00 = Frota)');
+rollback;
+
+\echo ''
 \echo '— O painel de quem vende o sistema'
 begin;
   set local role postgres;

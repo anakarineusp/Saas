@@ -1,0 +1,9 @@
+{
+  "name": "servidor-local",
+  "private": true,
+  "type": "module",
+  "description": "Ferramenta de desenvolvimento: finge ser o Supabase, ligado a um PostgreSQL local, para testar o aplicativo sem depender da internet.",
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
