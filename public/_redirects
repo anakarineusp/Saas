@@ -1,0 +1,4 @@
+# Mesma coisa do vercel.json, para quem publicar na Netlify.
+# Sem esta linha, abrir o link do motorista direto (/confirmar/...) daria
+# "página não encontrada", porque quem decide a tela é o próprio site.
+/*  /index.html  200

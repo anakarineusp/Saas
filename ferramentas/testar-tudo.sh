@@ -31,7 +31,14 @@ done
 mkdir -p "$FOTOS"
 node "$RAIZ/ferramentas/servidor-local/index.mjs" 54321 "$BANCO" > /tmp/servidor-local.log 2>&1 &
 SERVIDOR=$!
-(cd "$RAIZ" && npm run dev -- --port 5173 --strictPort > /tmp/vite.log 2>&1) &
+# MODO=producao testa o site já construído, do jeitinho que vai para o ar.
+if [ "${MODO:-desenvolvimento}" = "producao" ]; then
+  echo "  (testando o site construído para produção)"
+  (cd "$RAIZ" && npm run build > /tmp/build.log 2>&1) || { echo "falhou ao construir"; exit 1; }
+  (cd "$RAIZ" && npm run preview -- --port 5173 --strictPort > /tmp/vite.log 2>&1) &
+else
+  (cd "$RAIZ" && npm run dev -- --port 5173 --strictPort > /tmp/vite.log 2>&1) &
+fi
 VITE=$!
 trap 'kill $SERVIDOR $VITE 2>/dev/null || true' EXIT
 
