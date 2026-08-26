@@ -38,12 +38,28 @@ Se der algum recado em vermelho, me mande a foto da tela que eu vejo o que foi.
 
 ### Pegar as duas chaves
 
-7. No menu, vá em **Project Settings → API**.
-8. Copie o **Project URL** e a chave **anon public**.
+7. No menu da esquerda, lá embaixo, clique em **Project Settings** (a engrenagem).
+8. O Supabase já mudou o nome dessa tela algumas vezes. Procure um destes dois:
+
+   - **API Keys** → copie a **Publishable key** (começa com `sb_publishable_...`)
+   - **API** → em *Project API keys*, copie a linha marcada **anon** **public**
+     (um texto enorme que começa com `eyJ...`)
+
+   As duas servem, é a mesma coisa com nomes diferentes. A regra para não errar:
+   **a chave certa é a marcada como pública** — *publishable* ou *public*.
+
+9. Na mesma tela, ou em **Project Settings → General**, copie o **Project URL**
+   (`https://alguma-coisa.supabase.co`). Se não achar, ele também aparece na barra
+   do navegador: se lá estiver `supabase.com/dashboard/project/abcdefghijklm`,
+   o seu endereço é `https://abcdefghijklm.supabase.co`.
 
 Essas duas informações são públicas de propósito: elas ficam dentro do site, e
-quem manda em quem vê o quê é o banco de dados. **A outra chave, a `service_role`,
-é secreta. Nunca coloque ela no site, nem me mande por mensagem.**
+quem manda em quem vê o quê é o banco de dados.
+
+> **A outra chave — a que diz `service_role` ou `secret` — nunca vai para o site,
+> e nunca me mande por mensagem.** Ela passa por cima de todas as regras de
+> visibilidade. O único lugar dela é a tela de *Secrets* do Supabase, na parte do
+> pagamento.
 
 ### Criar o seu acesso de administradora
 

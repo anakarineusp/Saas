@@ -51,8 +51,9 @@ npm install
 npm run dev
 ```
 
-Antes, copie `.env.exemplo` para `.env` e preencha com os dados do seu projeto
-Supabase. Sem isso, o aplicativo abre avisando que falta configurar.
+Antes, copie `.env.exemplo` para `.env` e preencha com o endereço e a chave
+pública do seu projeto Supabase (a *publishable*, chamada de `anon` nas versões
+mais antigas do painel). Sem isso, o aplicativo abre avisando que falta configurar.
 
 ## Como testar tudo
 
