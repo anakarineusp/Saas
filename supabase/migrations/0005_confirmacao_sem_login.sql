@@ -15,6 +15,7 @@ create index if not exists confirmacoes_servico_idx on public.confirmacoes (serv
 
 alter table public.confirmacoes enable row level security;
 
+drop policy if exists confirmacoes_ver on public.confirmacoes;
 create policy confirmacoes_ver on public.confirmacoes for select
   using (app.eh_dono_de((select s.empresa_id from public.servicos s where s.id = servico_id)) or app.eh_admin());
 

@@ -51,109 +51,134 @@ alter table public.eventos_pagamento enable row level security;
 
 -- ----------------------------------------------------------------- empresas
 
+drop policy if exists empresas_ver on public.empresas;
 create policy empresas_ver on public.empresas for select using (
   id = app.empresa_id()
   or app.eh_admin()
   or exists (select 1 from public.motoristas m where m.empresa_id = empresas.id and m.perfil_id = auth.uid())
 );
 
+drop policy if exists empresas_editar on public.empresas;
 create policy empresas_editar on public.empresas for update
   using (app.eh_dono_de(id) or app.eh_admin())
   with check (app.eh_dono_de(id) or app.eh_admin());
 
 -- ------------------------------------------------------------------- perfis
 
+drop policy if exists perfis_ver on public.perfis;
 create policy perfis_ver on public.perfis for select using (
   id = auth.uid()
   or app.eh_admin()
   or (empresa_id is not null and empresa_id = app.empresa_id())
 );
 
+drop policy if exists perfis_editar on public.perfis;
 create policy perfis_editar on public.perfis for update
   using (id = auth.uid()) with check (id = auth.uid());
 
 -- --------------------------------------------------------------- motoristas
 
+drop policy if exists motoristas_ver on public.motoristas;
 create policy motoristas_ver on public.motoristas for select using (
   empresa_id = app.empresa_id() or app.eh_admin() or perfil_id = auth.uid()
 );
 
+drop policy if exists motoristas_gravar on public.motoristas;
 create policy motoristas_gravar on public.motoristas for insert
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists motoristas_editar on public.motoristas;
 create policy motoristas_editar on public.motoristas for update
   using (app.eh_dono_de(empresa_id) or app.eh_admin())
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists motoristas_excluir on public.motoristas;
 create policy motoristas_excluir on public.motoristas for delete
   using (app.eh_dono_de(empresa_id) or app.eh_admin());
 
 -- -------------------------------------------------------------- indicadores
 
+drop policy if exists indicadores_ver on public.indicadores;
 create policy indicadores_ver on public.indicadores for select
   using (empresa_id = app.empresa_id() or app.eh_admin());
 
+drop policy if exists indicadores_gravar on public.indicadores;
 create policy indicadores_gravar on public.indicadores for insert
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists indicadores_editar on public.indicadores;
 create policy indicadores_editar on public.indicadores for update
   using (app.eh_dono_de(empresa_id) or app.eh_admin())
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists indicadores_excluir on public.indicadores;
 create policy indicadores_excluir on public.indicadores for delete
   using (app.eh_dono_de(empresa_id) or app.eh_admin());
 
 -- ----------------------------------------------------------------- serviços
 -- O motorista enxerga apenas os serviços que são dele.
 
+drop policy if exists servicos_ver on public.servicos;
 create policy servicos_ver on public.servicos for select using (
   empresa_id = app.empresa_id()
   or app.eh_admin()
   or motorista_id in (select app.meus_motoristas())
 );
 
+drop policy if exists servicos_gravar on public.servicos;
 create policy servicos_gravar on public.servicos for insert
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists servicos_editar on public.servicos;
 create policy servicos_editar on public.servicos for update
   using (app.eh_dono_de(empresa_id) or app.eh_admin())
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists servicos_excluir on public.servicos;
 create policy servicos_excluir on public.servicos for delete
   using (app.eh_dono_de(empresa_id) or app.eh_admin());
 
 -- ------------------------------------------------- valor cobrado do cliente
 -- Sem nenhuma regra para motorista: para ele esta tabela simplesmente não existe.
 
+drop policy if exists valores_ver on public.servico_valores;
 create policy valores_ver on public.servico_valores for select
   using (empresa_id = app.empresa_id() or app.eh_admin());
 
+drop policy if exists valores_gravar on public.servico_valores;
 create policy valores_gravar on public.servico_valores for insert
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists valores_editar on public.servico_valores;
 create policy valores_editar on public.servico_valores for update
   using (app.eh_dono_de(empresa_id) or app.eh_admin())
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists valores_excluir on public.servico_valores;
 create policy valores_excluir on public.servico_valores for delete
   using (app.eh_dono_de(empresa_id) or app.eh_admin());
 
 -- ----------------------------------------------------------------- convites
 
+drop policy if exists convites_ver on public.convites;
 create policy convites_ver on public.convites for select
   using (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists convites_gravar on public.convites;
 create policy convites_gravar on public.convites for insert
   with check (app.eh_dono_de(empresa_id) or app.eh_admin());
 
+drop policy if exists convites_excluir on public.convites;
 create policy convites_excluir on public.convites for delete
   using (app.eh_dono_de(empresa_id) or app.eh_admin());
 
 -- ------------------------------------------------------------------- planos
 -- Os planos são públicos: a página de preços precisa deles antes do cadastro.
 
+drop policy if exists planos_ver on public.planos;
 create policy planos_ver on public.planos for select using (true);
 
+drop policy if exists planos_admin on public.planos;
 create policy planos_admin on public.planos for all
   using (app.eh_admin()) with check (app.eh_admin());
 
@@ -161,12 +186,15 @@ create policy planos_admin on public.planos for all
 -- Só leitura para a empresa. Quem escreve é o servidor que recebe o aviso da
 -- empresa de pagamentos (chave de serviço, que passa por cima destas regras).
 
+drop policy if exists assinaturas_ver on public.assinaturas;
 create policy assinaturas_ver on public.assinaturas for select
   using (empresa_id = app.empresa_id() or app.eh_admin());
 
+drop policy if exists pagamentos_ver on public.pagamentos;
 create policy pagamentos_ver on public.pagamentos for select
   using (empresa_id = app.empresa_id() or app.eh_admin());
 
+drop policy if exists eventos_admin on public.eventos_pagamento;
 create policy eventos_admin on public.eventos_pagamento for select
   using (app.eh_admin());
 

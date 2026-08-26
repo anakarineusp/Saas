@@ -2,7 +2,8 @@
 -- Como usam "security_invoker", as regras de quem vê o quê continuam valendo:
 -- para o motorista, a parte do valor do cliente simplesmente volta vazia.
 
-create or replace view public.servicos_completos
+drop view if exists public.servicos_completos;
+create view public.servicos_completos
 with (security_invoker = true) as
 select
   s.id,

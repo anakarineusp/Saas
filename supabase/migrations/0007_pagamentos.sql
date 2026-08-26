@@ -152,7 +152,8 @@ $$;
 grant execute on function public.escolher_plano(text) to authenticated;
 
 -- Resumo do dinheiro do mês, para o painel do dono do sistema.
-create or replace view public.painel_resumo
+drop view if exists public.painel_resumo;
+create view public.painel_resumo
 with (security_invoker = true) as
 select
   (select count(*) from public.empresas) as empresas,

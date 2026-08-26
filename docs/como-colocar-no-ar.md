@@ -17,12 +17,24 @@ Faça na ordem. Se travar em algum passo, é só me dizer o número do passo.
 
 ### Aplicar as regras do sistema
 
-4. No menu da esquerda, clique em **SQL Editor** e depois em **New query**.
-5. Abra a pasta `supabase/migrations` do projeto. Lá tem arquivos numerados,
-   de `0001` até `0009`.
-6. **Um de cada vez, na ordem do número**: abra o arquivo, copie tudo, cole no
-   SQL Editor e clique em **Run**. Espere aparecer "Success" antes de ir para o
-   próximo.
+São dois cliques e uma colagem. Está tudo num arquivo só.
+
+4. Abra este link no navegador:
+   **https://github.com/anakarineusp/Saas/blob/claude/spec-review-x140h3/docs/tudo-em-um.sql**
+5. No canto de cima à direita da caixa de código tem um **botão de copiar**
+   (dois quadradinhos sobrepostos). Clique nele: o arquivo inteiro vai para a
+   área de transferência.
+6. No Supabase, no menu da esquerda, clique em **SQL Editor** e depois em
+   **New query**.
+7. Cole (Ctrl+V, ou Cmd+V no Mac) e clique em **Run**, no canto de baixo à
+   direita.
+8. Espere aparecer **Success**. Pode demorar uns segundos. Pronto: o banco está
+   montado.
+
+Se der algum recado em vermelho, me mande a foto da tela que eu vejo o que foi.
+
+> Se você errar e rodar duas vezes, não tem problema nenhum: o arquivo foi feito
+> para poder ser rodado de novo sem estragar nada.
 
 ### Pegar as duas chaves
 

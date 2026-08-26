@@ -198,7 +198,8 @@ $$;
 -- --------------------------------------------------------------- assinatura
 
 -- Quantos dias de teste ainda restam e em que pé está a assinatura.
-create or replace view public.minha_assinatura
+drop view if exists public.minha_assinatura;
+create view public.minha_assinatura
 with (security_invoker = true) as
 select
   a.empresa_id,
@@ -217,7 +218,8 @@ left join public.planos p on p.id = a.plano_id;
 
 -- ------------------------------------------------------------ painel do dono do sistema
 
-create or replace view public.painel_clientes
+drop view if exists public.painel_clientes;
+create view public.painel_clientes
 with (security_invoker = true) as
 select
   e.id,
