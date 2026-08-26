@@ -5,35 +5,6 @@
 --  4. o motorista não consegue alterar nada além de confirmar o serviço dele
 --  5. o administrador do sistema enxerga todos os clientes
 
-create schema if not exists testes;
-
-create or replace function testes.confere(p_ok boolean, p_texto text) returns void
-language plpgsql as $$
-begin
-  if p_ok then raise notice '  ok    %', p_texto;
-  else raise exception 'FALHOU: %', p_texto;
-  end if;
-end $$;
-
-
-create or replace function testes.confere_erro(p_sql text, p_texto text) returns void
-language plpgsql as $$
-begin
-  execute p_sql;
-  raise exception 'NAO_BARROU';
-exception
-  when others then
-    if sqlerrm = 'NAO_BARROU' then
-      raise exception 'FALHOU: % (era para o banco barrar, e ele deixou passar)', p_texto;
-    end if;
-    raise notice '  ok    %', p_texto;
-end $$;
-
-grant execute on function testes.confere_erro(text, text) to anon, authenticated;
-
-grant usage on schema testes to anon, authenticated;
-grant execute on function testes.confere(boolean, text) to anon, authenticated;
-
 -- pessoas de teste
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'ana@serratransfer.com.br'),
