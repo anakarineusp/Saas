@@ -10,7 +10,7 @@ COMO="${COMO:-su postgres -c}"
 echo "Recriando o banco $BANCO..."
 $COMO "psql -q -c 'drop database if exists $BANCO' -c 'create database $BANCO'" >/dev/null
 
-for arquivo in "$RAIZ"/supabase/local/*.sql "$RAIZ"/supabase/migracoes/*.sql; do
+for arquivo in "$RAIZ"/supabase/local/*.sql "$RAIZ"/supabase/migrations/*.sql; do
   printf '  aplicando %-28s' "$(basename "$arquivo")"
   $COMO "psql -q -v ON_ERROR_STOP=1 -d $BANCO -f $arquivo" 2>&1 | grep -v 'already exists, skipping' || true
   echo 'ok'

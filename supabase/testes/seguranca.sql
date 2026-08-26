@@ -15,6 +15,22 @@ begin
   end if;
 end $$;
 
+
+create or replace function testes.confere_erro(p_sql text, p_texto text) returns void
+language plpgsql as $$
+begin
+  execute p_sql;
+  raise exception 'NAO_BARROU';
+exception
+  when others then
+    if sqlerrm = 'NAO_BARROU' then
+      raise exception 'FALHOU: % (era para o banco barrar, e ele deixou passar)', p_texto;
+    end if;
+    raise notice '  ok    %', p_texto;
+end $$;
+
+grant execute on function testes.confere_erro(text, text) to anon, authenticated;
+
 grant usage on schema testes to anon, authenticated;
 grant execute on function testes.confere(boolean, text) to anon, authenticated;
 
@@ -146,6 +162,81 @@ begin;
   select testes.confere((select pago_centavos from public.painel_clientes where nome = 'Serra Transfer') = 19900,
                         'enxerga quanto cada cliente já pagou');
 commit;
+
+\echo ''
+\echo '— O link do motorista, sem login nenhum'
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111"}';
+  select public.gravar_servico(
+    current_date, '18:45', 'transfer_out', 'Família Piovesan', 4,
+    'Hotel Bertoluci, Gramado', 'Aeroporto Salgado Filho, Porto Alegre',
+    52000, 'G3 2056', null
+  ) as servico2 \gset
+  select public.atribuir_motorista(:'servico2', :'motorista');
+  select public.link_do_servico(:'servico2') as link \gset
+commit;
+
+begin;
+  set local role anon;   -- ninguém logado, exatamente como o motorista abrindo o link
+  select testes.confere((select count(*) from public.servico_do_link(:'link')) = 1,
+                        'o link abre sem login');
+  select testes.confere((select valor_motorista_centavos from public.servico_do_link(:'link')) = 20800,
+                        'o link mostra o valor do motorista: R$ 208,00');
+  select testes.confere((select count(*) from public.servico_do_link('token-inventado')) = 0,
+                        'link inventado não abre nada');
+  select testes.confere_erro('select * from public.servicos', 'sem login não dá para listar serviços');
+  select testes.confere_erro('select * from public.servico_valores', 'sem login não dá para ver valores');
+
+  select public.confirmar_pelo_link(:'link');
+  select testes.confere((select confirmado from public.servico_do_link(:'link')),
+                        'o motorista confirma pelo link');
+commit;
+
+\echo ''
+\echo '— Os limites do plano'
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111"}';
+  insert into public.motoristas (empresa_id, nome, telefone, veiculo, lugares, percentual)
+  values (:'empresa_ana', 'Anderson', '5554999845512', 'Spin', 6, 40),
+         (:'empresa_ana', 'Luciane', '5554999233470', 'Onix', 4, 35);
+  select testes.confere((select count(*) from public.motoristas) = 3, 'no teste grátis cabem 3 motoristas');
+  select testes.confere_erro(
+    'insert into public.motoristas (empresa_id, nome, telefone, veiculo, lugares, percentual)
+     values (''' || :'empresa_ana' || ''', ''Vanderlei'', ''5554999671208'', ''Sprinter'', 15, 45)',
+    'o quarto motorista é barrado pelo limite do plano');
+commit;
+
+\echo ''
+\echo '— Quando os 7 dias de teste acabam'
+begin;
+  set local role postgres;
+  update public.empresas set teste_termina_em = now() - interval '1 day' where id = :'empresa_ana';
+
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111"}';
+  select testes.confere(not (select pode_usar from public.minha_assinatura), 'o teste aparece como vencido');
+  select testes.confere_erro(
+    'select public.gravar_servico(current_date, ''09:00'', ''passeio'', ''Teste'', 2, ''a'', ''b'', 30000)',
+    'com o teste vencido não grava mais serviço');
+rollback;
+
+begin;
+  set local role postgres;
+  update public.assinaturas set status = 'ativa', plano_id = 'profissional' where empresa_id = :'empresa_ana';
+  update public.empresas set teste_termina_em = now() - interval '1 day' where id = :'empresa_ana';
+
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111"}';
+  select testes.confere((select pode_usar from public.minha_assinatura), 'assinando, volta a poder usar');
+  select testes.confere((select public.gravar_servico(current_date, '09:00', 'passeio', 'Grupo Zanella', 2,
+                          'Centro de Gramado', 'Lago Negro', 30000)) is not null,
+                        'com plano ativo grava serviço de novo');
+  insert into public.motoristas (empresa_id, nome, telefone, veiculo, lugares, percentual)
+  values (:'empresa_ana', 'Vanderlei', '5554999671208', 'Sprinter', 15, 45);
+  select testes.confere((select count(*) from public.motoristas) = 4, 'no plano Profissional não há limite de motoristas');
+rollback;
 
 \echo ''
 \echo 'TODOS OS TESTES PASSARAM'
