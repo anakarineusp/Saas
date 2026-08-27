@@ -22,7 +22,7 @@ function Numero({
 }) {
   const estilos = {
     normal: 'painel',
-    destaque: 'border border-destaque/40 bg-destaque/10',
+    destaque: 'painel border-l-2 border-l-destaque',
     saida: 'painel',
   }
   const cor = tom === 'destaque' ? 'text-destaque' : tom === 'saida' ? 'text-fraca' : 'text-tinta'
@@ -106,7 +106,7 @@ export function Acerto() {
   if (carregando) return <Carregando />
 
   return (
-    <div className="px-4 pt-5">
+    <div className="px-5 pt-6">
       <div className="flex items-center justify-between">
         <button
           type="button"

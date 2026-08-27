@@ -12,10 +12,11 @@ import { dataCurta, hora, moeda, rotuloTipo } from '../../lib/formato'
 import { abrirWhatsApp, linkDeConfirmacao, mensagemParaIndicador, mensagemParaMotorista } from '../../lib/whatsapp'
 import type { Indicador, Motorista, Servico } from '../../tipos'
 
-const ETIQUETA = {
-  livre: 'bg-ok/15 text-ok border-ok/30',
-  ocupado: 'bg-atencao/15 text-atencao border-atencao/30',
-  nao_cabe: 'bg-alerta/15 text-alerta border-alerta/30',
+// Um ponto colorido basta: o texto continua legível e a tela não vira semáforo.
+const PONTO = {
+  livre: 'bg-ok',
+  ocupado: 'bg-atencao',
+  nao_cabe: 'bg-alerta',
 }
 
 export function Atribuir({
@@ -111,19 +112,19 @@ export function Atribuir({
           <span className="font-display font-bold text-tinta tabular-nums">{moeda(servico.valor_centavos)}</span>
         </div>
         {servico.motivo && (
-          <p className="mt-3 rounded-lg bg-alerta/10 px-3 py-2 text-xs text-alerta">Motivo: {servico.motivo}</p>
+          <p className="mt-3 text-xs text-alerta">Motivo: {servico.motivo}</p>
         )}
       </div>
 
       <Erro>{erro}</Erro>
 
       {motorista && !encerrado && (
-        <div className="space-y-3 rounded-2xl border border-ok/30 bg-ok/8 p-4">
+        <div className="painel space-y-3 rounded-2xl p-4">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-display font-bold text-tinta">
               {motorista.nome} <span className="font-normal text-fraca">· {motorista.veiculo}</span>
             </span>
-            <span className="font-display text-sm font-bold text-ok tabular-nums">
+            <span className="font-display text-sm font-bold text-tinta tabular-nums">
               {moeda(servico.valor_motorista_centavos)}
             </span>
           </div>
@@ -198,7 +199,7 @@ export function Atribuir({
                   onClick={() => void escolher(m)}
                   className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-colors disabled:opacity-40 ${
                     m.id === servico.motorista_id
-                      ? 'border-destaque bg-destaque/10'
+                      ? 'border-destaque bg-superficie2'
                       : 'border-borda bg-superficie hover:border-bordaforte'
                   }`}
                 >
@@ -208,7 +209,8 @@ export function Atribuir({
                       {m.veiculo} · {m.lugares} lugares · {m.percentual}%
                     </span>
                   </span>
-                  <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${ETIQUETA[disp.estado]}`}>
+                  <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-fraca">
+                    <span className={`h-1.5 w-1.5 rounded-full ${PONTO[disp.estado]}`} />
                     {rotulo}
                   </span>
                 </button>

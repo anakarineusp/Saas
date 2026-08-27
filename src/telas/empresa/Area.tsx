@@ -17,15 +17,15 @@ export function Area() {
 
   const aviso =
     assinatura && !assinatura.pode_usar
-      ? { cor: 'bg-alerta text-white', texto: 'Seu teste terminou. Escolha um plano para voltar a lançar serviços.' }
+      ? { cor: 'painel border-l-2 border-l-alerta text-tinta', texto: 'Seu teste terminou. Escolha um plano para voltar a lançar serviços.' }
       : assinatura?.status === 'atrasada'
-        ? { cor: 'bg-atencao text-[#1a1206]', texto: 'Há um pagamento em atraso na sua assinatura.' }
+        ? { cor: 'painel border-l-2 border-l-atencao text-tinta', texto: 'Há um pagamento em atraso na sua assinatura.' }
         : assinatura?.status === 'teste'
           ? {
               cor:
                 assinatura.dias_de_teste <= 2
-                  ? 'bg-atencao text-[#1a1206]'
-                  : 'border border-borda bg-superficie text-fraca',
+                  ? 'painel border-l-2 border-l-atencao text-tinta'
+                  : 'painel text-fraca',
               texto: `Teste grátis: ${assinatura.dias_de_teste} ${assinatura.dias_de_teste === 1 ? 'dia restante' : 'dias restantes'}.`,
             }
           : null

@@ -27,9 +27,9 @@ function Cartao({ servico, aoTocar }: { servico: Servico; aoTocar: () => void })
       onClick={aoTocar}
       className={`w-full rounded-2xl p-4 text-left transition-all duration-150 active:scale-[0.99] ${
         cancelado
-          ? 'border border-borda bg-superficie/40 opacity-60'
+          ? 'painel opacity-50'
           : semMotorista
-            ? 'border-2 border-alerta/70 bg-superficie shadow-[0_0_30px_-16px_var(--c-alerta)]'
+            ? 'painel border-l-2 border-l-alerta'
             : 'painel'
       }`}
     >
@@ -54,7 +54,7 @@ function Cartao({ servico, aoTocar }: { servico: Servico; aoTocar: () => void })
       </p>
 
       {servico.motivo && (
-        <p className="mt-2 rounded-lg bg-alerta/10 px-2.5 py-1.5 text-xs text-alerta">Motivo: {servico.motivo}</p>
+        <p className="mt-2 text-xs text-alerta">Motivo: {servico.motivo}</p>
       )}
 
       <div className="mt-3 flex items-end justify-between gap-3 border-t border-borda pt-3">
@@ -63,7 +63,7 @@ function Cartao({ servico, aoTocar }: { servico: Servico; aoTocar: () => void })
             {servico.motorista} <span className="text-tenue">· {servico.veiculo}</span>
           </span>
         ) : (
-          <span className="text-sm font-semibold text-alerta">Escalar motorista</span>
+          <span className="text-sm font-medium text-alerta">Escalar motorista</span>
         )}
         <span className="shrink-0 font-display text-sm font-bold text-tinta tabular-nums">
           {moeda(servico.valor_centavos)}
@@ -135,7 +135,7 @@ export function Hoje() {
   const primeiraVez = motoristas.length === 0 && servicos.length === 0
 
   return (
-    <div className="px-4 pt-5">
+    <div className="px-5 pt-6">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold tracking-[0.15em] text-tenue uppercase">
@@ -183,29 +183,36 @@ export function Hoje() {
 
       {(semMotorista > 0 || aguardando.length > 0 || recusados > 0) && (
         <div className="mt-4 space-y-2">
-          {semMotorista > 0 && (
-            <div className="flex items-center gap-2 rounded-xl bg-alerta px-4 py-3 text-sm font-bold text-white">
-              <Icone nome="aviso" className="h-4 w-4 shrink-0" />
-              {semMotorista} {semMotorista === 1 ? 'serviço sem motorista' : 'serviços sem motorista'}
-            </div>
-          )}
-          {recusados > 0 && (
-            <div className="flex items-center gap-2 rounded-xl border border-alerta/40 bg-alerta/10 px-4 py-3 text-sm font-bold text-alerta">
-              <Icone nome="volta" className="h-4 w-4 shrink-0" />
-              {recusados} {recusados === 1 ? 'serviço recusado' : 'serviços recusados'} — precisa de outro motorista
-            </div>
-          )}
-          {aguardando.length > 0 && (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-atencao/40 bg-atencao/10 px-4 py-2.5">
-              <span className="flex items-center gap-2 text-sm font-bold text-atencao">
-                <Icone nome="relogio" className="h-4 w-4 shrink-0" />
-                {aguardando.length} sem resposta
-              </span>
-              <Botao tom="fantasma" tamanho="pequeno" onClick={() => void recobrar()}>
-                Cobrar de novo
-              </Botao>
-            </div>
-          )}
+          <div className="painel divide-y divide-borda rounded-2xl">
+            {semMotorista > 0 && (
+              <p className="flex items-center gap-2.5 px-4 py-3 text-sm">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-alerta" />
+                <span className="font-semibold text-tinta">
+                  {semMotorista} {semMotorista === 1 ? 'serviço' : 'serviços'} sem motorista
+                </span>
+              </p>
+            )}
+            {recusados > 0 && (
+              <p className="flex items-center gap-2.5 px-4 py-3 text-sm">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-alerta" />
+                <span className="font-semibold text-tinta">
+                  {recusados} {recusados === 1 ? 'recusado' : 'recusados'}
+                </span>
+                <span className="text-tenue">precisa de outro motorista</span>
+              </p>
+            )}
+            {aguardando.length > 0 && (
+              <div className="flex items-center justify-between gap-3 px-4 py-2">
+                <p className="flex items-center gap-2.5 text-sm">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-atencao" />
+                  <span className="font-semibold text-tinta">{aguardando.length} sem resposta</span>
+                </p>
+                <Botao tom="fantasma" tamanho="pequeno" onClick={() => void recobrar()}>
+                  Cobrar de novo
+                </Botao>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

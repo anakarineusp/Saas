@@ -31,45 +31,50 @@
   --color-alerta: var(--c-alerta);
 }
 
-/* escuro — o padrão */
-:root {
-  --c-fundo: #070b14;
-  --c-fundo2: #0b1220;
-  --c-superficie: #101a2c;
-  --c-superficie2: #16233a;
-  --c-borda: #1e2d47;
-  --c-bordaforte: #2c405f;
-  --c-tinta: #eaf1ff;
-  --c-fraca: #9fb0cc;
-  --c-tenue: #6b7d9a;
-  --c-destaque: #4cc4ff;
-  --c-destaque2: #1b8fd6;
-  --c-ok: #34d399;
-  --c-atencao: #fbbf24;
-  --c-alerta: #fb6a72;
+/* escuro — o padrão.
 
-  --brilho: 0 0 0 1px rgb(255 255 255 / 0.04), 0 18px 40px -24px rgb(0 0 0 / 0.9);
+   Cores de baixa saturação de propósito: numa tela escura, cor viva pesa e
+   cansa. A hierarquia vem do tamanho e do espaço, não do berro. O azul só
+   aparece no que é clicável de verdade; verde, âmbar e vermelho ficam
+   guardados para recado. */
+:root {
+  --c-fundo: #0a0d14;
+  --c-fundo2: #0e121b;
+  --c-superficie: #141926;
+  --c-superficie2: #1a2130;
+  --c-borda: #222a39;
+  --c-bordaforte: #313b4e;
+  --c-tinta: #e6eaf2;
+  --c-fraca: #9aa4b6;
+  --c-tenue: #6b7486;
+  --c-destaque: #6fa3d2;
+  --c-destaque2: #4a7ba7;
+  --c-ok: #6fbf9b;
+  --c-atencao: #d3a45f;
+  --c-alerta: #d5787e;
+
+  --brilho: 0 1px 0 0 rgb(255 255 255 / 0.03);
   color-scheme: dark;
 }
 
 /* claro — para quem trabalha no sol */
 [data-tema='claro'] {
-  --c-fundo: #f4f7fc;
+  --c-fundo: #f6f8fb;
   --c-fundo2: #ffffff;
   --c-superficie: #ffffff;
-  --c-superficie2: #f1f5fb;
-  --c-borda: #dde5f2;
-  --c-bordaforte: #c3d0e4;
-  --c-tinta: #0b1628;
-  --c-fraca: #4a5a75;
-  --c-tenue: #7488a5;
-  --c-destaque: #0f7fc4;
-  --c-destaque2: #0a5f95;
-  --c-ok: #0e9f6e;
-  --c-atencao: #b45309;
-  --c-alerta: #d33843;
+  --c-superficie2: #f1f4f9;
+  --c-borda: #e2e7ef;
+  --c-bordaforte: #c6cedb;
+  --c-tinta: #131a26;
+  --c-fraca: #556072;
+  --c-tenue: #838d9e;
+  --c-destaque: #2c6fa8;
+  --c-destaque2: #1f5480;
+  --c-ok: #2e8b67;
+  --c-atencao: #9a6a1f;
+  --c-alerta: #b5484f;
 
-  --brilho: 0 1px 2px rgb(16 30 54 / 0.06), 0 12px 28px -20px rgb(16 30 54 / 0.35);
+  --brilho: 0 1px 2px rgb(19 26 38 / 0.04);
   color-scheme: light;
 }
 
@@ -231,12 +236,13 @@ textarea {
 
 /* ---------------------------------------------------------------- pinceladas */
 
-/* Vidro fosco dos painéis. */
+/* Superfície dos painéis: um fio de borda, sem vidro nem sombra pesada.
+   Sombra e desfoque em tudo viram ruído; ficam guardados para o painel que
+   sobe por cima do conteúdo. */
 .painel {
-  background: color-mix(in oklab, var(--c-superficie) 88%, transparent);
+  background: var(--c-superficie);
   border: 1px solid var(--c-borda);
   box-shadow: var(--brilho);
-  backdrop-filter: blur(10px);
 }
 
 /* Luz suave atrás do conteúdo principal. */
@@ -245,17 +251,17 @@ textarea {
   position: absolute;
   inset: -30% -10% auto -10%;
   height: 70%;
-  background:
-    radial-gradient(60% 60% at 20% 20%, color-mix(in oklab, var(--c-destaque) 22%, transparent), transparent 70%),
-    radial-gradient(50% 50% at 80% 10%, color-mix(in oklab, var(--c-ok) 14%, transparent), transparent 70%);
-  filter: blur(40px);
+  background: radial-gradient(
+    70% 60% at 25% 15%,
+    color-mix(in oklab, var(--c-destaque) 9%, transparent),
+    transparent 72%
+  );
+  filter: blur(50px);
   pointer-events: none;
   z-index: 0;
 }
 
+/* Uma única palavra em outra cor vale mais que o título inteiro colorido. */
 .texto-destaque {
-  background: linear-gradient(100deg, var(--c-tinta) 20%, var(--c-destaque) 60%, var(--c-tinta) 92%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--c-destaque);
 }

@@ -307,7 +307,7 @@ export function Cadastros() {
   if (carregando) return <Carregando />
 
   return (
-    <div className="px-4 pt-5">
+    <div className="px-5 pt-6">
       <h1 className="font-display text-2xl font-bold text-tinta">Cadastros</h1>
 
       <div className="mt-4 flex gap-1 rounded-xl border border-borda bg-superficie p-1">

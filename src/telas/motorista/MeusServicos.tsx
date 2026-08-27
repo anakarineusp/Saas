@@ -77,14 +77,14 @@ export function MeusServicos() {
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-destaque/30 bg-destaque/10 p-4">
-        <p className="text-xs text-destaque">A receber pelos próximos serviços</p>
+      <div className="painel mt-4 rounded-2xl border-l-2 border-l-destaque p-4">
+        <p className="text-xs text-tenue">A receber pelos próximos serviços</p>
         <p className="font-display mt-1 text-3xl font-extrabold text-tinta tabular-nums">{moeda(total)}</p>
       </div>
 
       {aguardando > 0 && (
-        <p className="mt-3 flex items-center gap-2 rounded-xl border border-atencao/40 bg-atencao/10 px-4 py-2.5 text-sm font-bold text-atencao">
-          <Icone nome="relogio" className="h-4 w-4" />
+        <p className="painel mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-tinta">
+          <span className="h-1.5 w-1.5 rounded-full bg-atencao" />
           {aguardando} {aguardando === 1 ? 'serviço esperando' : 'serviços esperando'} sua resposta
         </p>
       )}

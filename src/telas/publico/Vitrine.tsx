@@ -198,8 +198,8 @@ export function Vitrine() {
 
         <div className="relative mx-auto grid max-w-6xl gap-12 px-5 pt-16 pb-20 sm:pt-24 sm:pb-28 lg:grid-cols-[1.15fr_1fr] lg:items-center">
           <div>
-            <p className="entra inline-flex items-center gap-2 rounded-full border border-borda bg-fundo2/70 px-3 py-1.5 text-xs font-semibold text-destaque backdrop-blur">
-              <span className="pulsa h-1.5 w-1.5 rounded-full bg-destaque" />
+            <p className="entra inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-tenue uppercase">
+              <span className="h-1 w-1 rounded-full bg-destaque" />
               Feito para transfer turístico na serra
             </p>
 
@@ -209,7 +209,7 @@ export function Vitrine() {
               <span className="texto-destaque">cabe numa tela.</span>
             </h1>
 
-            <p className="entra atraso-2 mt-6 max-w-lg text-lg leading-relaxed text-fraca">
+            <p className="entra atraso-2 mt-6 max-w-prose text-lg leading-relaxed text-fraca">
               Larga o caderno e a planilha. Lance o serviço, escale quem está livre e avise pelo WhatsApp — o
               motorista confirma sem instalar nada, e <strong className="text-tinta">nunca vê o valor cobrado do
               cliente</strong>.
@@ -245,8 +245,8 @@ export function Vitrine() {
       </section>
 
       {/* ---------------------------------------------------------------- dor */}
-      <section className="border-t border-borda bg-fundo2">
-        <div className="mx-auto max-w-6xl px-5 py-20">
+      <section className="border-t border-borda bg-fundo2/60">
+        <div className="mx-auto max-w-6xl px-5 py-24">
           <p className="revela text-xs font-bold tracking-[0.2em] text-alerta uppercase">O jeito antigo</p>
           <h2 className="revela font-display mt-3 max-w-2xl text-3xl font-bold text-balance sm:text-4xl">
             Você não perde dinheiro por falta de cliente. Perde por falta de controle.
@@ -259,9 +259,8 @@ export function Vitrine() {
                 className="revela flex gap-4 rounded-2xl border border-borda bg-superficie/50 p-5"
                 style={{ transitionDelay: `${i * 60}ms` }}
               >
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-alerta/12 text-alerta">
-                  <Icone nome="aviso" className="h-4 w-4" />
-                </span>
+                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-alerta" />
+
                 <div>
                   <h3 className="font-display font-semibold text-tinta">{dor.titulo}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-fraca">{dor.texto}</p>
@@ -278,7 +277,7 @@ export function Vitrine() {
 
       {/* -------------------------------------------------------- como funciona */}
       <section className="relative overflow-hidden">
-        <div className="aurora relative mx-auto max-w-6xl px-5 py-20">
+        <div className="aurora relative mx-auto max-w-6xl px-5 py-24">
           <p className="revela relative text-xs font-bold tracking-[0.2em] text-destaque uppercase">O jeito novo</p>
           <h2 className="revela font-display relative mt-3 text-3xl font-bold text-balance sm:text-4xl">
             Quatro passos, todo dia
@@ -295,7 +294,7 @@ export function Vitrine() {
                 style={{ transitionDelay: `${i * 70}ms` }}
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-destaque/12 text-destaque">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-borda text-fraca">
                     <Icone nome={passo.icone} className="h-4.5 w-4.5" />
                   </span>
                   <span className="font-display text-2xl font-extrabold text-borda tabular-nums">
@@ -311,8 +310,8 @@ export function Vitrine() {
       </section>
 
       {/* ----------------------------------------------------------- diferenças */}
-      <section className="border-t border-borda bg-fundo2">
-        <div className="mx-auto max-w-6xl px-5 py-20">
+      <section className="border-t border-borda bg-fundo2/60">
+        <div className="mx-auto max-w-6xl px-5 py-24">
           <h2 className="revela font-display text-3xl font-bold text-balance sm:text-4xl">
             Três coisas que nenhuma planilha faz
           </h2>
@@ -324,7 +323,7 @@ export function Vitrine() {
                 className="revela painel rounded-2xl p-6"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ok/12 text-ok">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-borda text-fraca">
                   <Icone nome={item.icone} className="h-5 w-5" />
                 </span>
                 <h3 className="font-display mt-4 text-lg font-semibold text-balance text-tinta">{item.titulo}</h3>
@@ -337,7 +336,7 @@ export function Vitrine() {
 
       {/* --------------------------------------------------------------- planos */}
       <section id="planos" className="scroll-mt-16">
-        <div className="mx-auto max-w-6xl px-5 py-20">
+        <div className="mx-auto max-w-6xl px-5 py-24">
           <div className="text-center">
             <h2 className="revela font-display text-3xl font-bold sm:text-4xl">Planos</h2>
             <p className="revela mt-2 text-fraca">Comece com 7 dias grátis. Depois, o plano que couber na sua frota.</p>
@@ -349,14 +348,12 @@ export function Vitrine() {
                   type="button"
                   onClick={() => setCiclo(opcao)}
                   className={`rounded-lg px-4 py-2 text-sm font-semibold capitalize transition-colors ${
-                    ciclo === opcao ? 'bg-destaque text-[#04121f]' : 'text-fraca hover:text-tinta'
+                    ciclo === opcao ? 'bg-superficie2 text-tinta' : 'text-tenue hover:text-fraca'
                   }`}
                 >
                   {opcao}
                   {opcao === 'anual' && (
-                    <span className={`ml-1.5 text-xs ${ciclo === 'anual' ? 'text-[#04121f]/70' : 'text-ok'}`}>
-                      2 meses grátis
-                    </span>
+                    <span className="ml-1.5 text-xs font-medium text-ok">2 meses grátis</span>
                   )}
                 </button>
               ))}
@@ -371,13 +368,13 @@ export function Vitrine() {
                   key={plano.id}
                   className={`revela relative rounded-2xl p-6 ${
                     destaque
-                      ? 'border-2 border-destaque bg-superficie shadow-[0_30px_70px_-35px_var(--c-destaque)]'
+                      ? 'painel border-destaque'
                       : 'painel'
                   }`}
                   style={{ transitionDelay: `${i * 70}ms` }}
                 >
                   {destaque && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-destaque px-3 py-1 text-xs font-bold text-[#04121f]">
+                    <span className="absolute -top-2.5 left-6 rounded-full bg-destaque px-2.5 py-0.5 text-[11px] font-bold text-[#08121c]">
                       Mais escolhido
                     </span>
                   )}
@@ -429,7 +426,7 @@ export function Vitrine() {
       <section className="border-y border-borda bg-fundo2">
         <div className="mx-auto max-w-4xl px-5 py-16">
           <div className="revela painel flex flex-col items-start gap-6 rounded-3xl p-8 sm:flex-row sm:items-center">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-destaque/12 text-destaque">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-borda text-fraca">
               <Icone nome="usuario" className="h-6 w-6" />
             </span>
             <div className="flex-1">
@@ -449,7 +446,7 @@ export function Vitrine() {
       </section>
 
       {/* ------------------------------------------------------------ perguntas */}
-      <section className="mx-auto max-w-3xl px-5 py-20">
+      <section className="mx-auto max-w-3xl px-5 py-24">
         <h2 className="revela font-display text-3xl font-bold sm:text-4xl">Perguntas que sempre fazem</h2>
         <div className="revela mt-8">
           {PERGUNTAS.map((item) => (

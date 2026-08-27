@@ -5,12 +5,11 @@ type Tom = 'principal' | 'contorno' | 'fantasma' | 'perigo' | 'ok'
 type Tamanho = 'normal' | 'grande' | 'pequeno'
 
 const TONS: Record<Tom, string> = {
-  principal:
-    'bg-destaque text-[#04121f] hover:brightness-110 active:brightness-95 shadow-[0_10px_30px_-12px_var(--c-destaque)]',
-  contorno: 'border border-bordaforte text-tinta hover:bg-superficie2 active:bg-superficie',
+  principal: 'bg-destaque text-[#08121c] hover:brightness-108 active:brightness-95',
+  contorno: 'border border-borda text-tinta hover:border-bordaforte hover:bg-superficie2',
   fantasma: 'text-fraca hover:text-tinta hover:bg-superficie2',
-  perigo: 'bg-alerta text-white hover:brightness-110 active:brightness-95',
-  ok: 'bg-ok text-[#04180f] hover:brightness-110 active:brightness-95',
+  perigo: 'bg-alerta text-[#160406] hover:brightness-108 active:brightness-95',
+  ok: 'bg-ok text-[#04180f] hover:brightness-108 active:brightness-95',
 }
 
 const TAMANHOS: Record<Tamanho, string> = {

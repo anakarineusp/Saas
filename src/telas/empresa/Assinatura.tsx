@@ -73,13 +73,13 @@ export function Assinatura() {
   if (carregando) return <Carregando linhas={2} />
 
   return (
-    <div className="px-4 pt-5">
+    <div className="px-5 pt-6">
       <h1 className="font-display text-2xl font-bold text-tinta">Assinatura</h1>
 
       {assinatura && (
         <div
           className={`mt-4 rounded-2xl p-4 ${
-            assinatura.pode_usar ? 'painel' : 'border border-alerta/40 bg-alerta/10'
+            assinatura.pode_usar ? 'painel' : 'painel border-l-2 border-l-alerta'
           }`}
         >
           <div className="flex items-start justify-between gap-3">
@@ -105,7 +105,7 @@ export function Assinatura() {
           )}
 
           {assinatura.meses_de_credito > 0 && (
-            <p className="mt-3 flex items-center gap-2 rounded-xl bg-ok/12 px-3 py-2 text-sm font-semibold text-ok">
+            <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-ok">
               <Icone nome="check" className="h-4 w-4" traco={2.6} />
               {assinatura.meses_de_credito}{' '}
               {assinatura.meses_de_credito === 1 ? 'mês grátis guardado' : 'meses grátis guardados'} por indicação
@@ -168,7 +168,7 @@ export function Assinatura() {
         {planos.map((plano) => {
           const atual = assinatura?.plano_id === plano.id && assinatura.status === 'ativa' && assinatura.ciclo === ciclo
           return (
-            <div key={plano.id} className={`rounded-2xl p-4 ${atual ? 'border border-ok/40 bg-ok/8' : 'painel'}`}>
+            <div key={plano.id} className={`rounded-2xl p-4 ${atual ? 'painel border-l-2 border-l-ok' : 'painel'}`}>
               <div className="flex items-baseline justify-between gap-3">
                 <span className="font-display font-bold text-tinta">{plano.nome}</span>
                 <span className="font-display font-bold text-tinta tabular-nums">

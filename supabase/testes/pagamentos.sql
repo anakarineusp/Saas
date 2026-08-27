@@ -121,18 +121,25 @@ commit;
 \echo ''
 \echo '— Alguém logado tentando forjar um pagamento'
 begin;
+  set local role postgres;
+  update public.assinaturas set status = 'cancelada' where empresa_id = :'empresa';
+
   set local role authenticated;
   set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444"}';
   select testes.confere_erro(
     'select public.processar_evento_pagamento(''asaas'', ''{}''::jsonb)',
     'nem o dono da empresa consegue registrar pagamento por conta própria');
-  select testes.confere_erro(
-    'update public.assinaturas set status = ''ativa''',
+  -- Aqui o banco não dá erro: ele simplesmente não deixa a linha ser alcançada,
+  -- que é o mesmo resultado. Por isso conferimos o estado, e não a exceção.
+  -- (a assinatura foi deixada como cancelada logo acima, de propósito)
+  update public.assinaturas set status = 'ativa';
+  select testes.confere(
+    (select status from public.assinaturas where empresa_id = :'empresa') = 'cancelada',
     'nem consegue deixar a própria assinatura ativa na marra');
   select testes.confere_erro(
     'insert into public.pagamentos (empresa_id, valor_centavos, status) values (''' || :'empresa' || ''', 1, ''pago'')',
     'nem consegue inventar um pagamento');
-commit;
+rollback;
 
 \echo ''
 \echo '— Pagamento que chega sem plano escolhido'

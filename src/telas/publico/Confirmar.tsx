@@ -91,8 +91,8 @@ export function Confirmar() {
           <Item rotulo="Levar" valor={servico.destino} />
         </div>
 
-        <div className="mt-4 rounded-2xl border border-destaque/30 bg-destaque/10 p-5 text-center">
-          <p className="text-xs font-bold tracking-[0.15em] text-destaque uppercase">Seu valor</p>
+        <div className="painel mt-4 rounded-2xl p-5 text-center">
+          <p className="text-xs font-bold tracking-[0.15em] text-tenue uppercase">Seu valor</p>
           <p className="font-display mt-1 text-4xl font-extrabold text-tinta tabular-nums">
             {moeda(servico.valor_motorista_centavos)}
           </p>
@@ -103,7 +103,7 @@ export function Confirmar() {
         </div>
 
         {servico.confirmado ? (
-          <div className="mt-2 flex items-center justify-center gap-2 rounded-2xl border border-ok/40 bg-ok/12 py-4 font-display font-bold text-ok">
+          <div className="painel mt-2 flex items-center justify-center gap-2 rounded-2xl border-l-2 border-l-ok py-4 font-display font-bold text-ok">
             <Icone nome="check" className="h-5 w-5" traco={3} />
             Serviço confirmado
           </div>
