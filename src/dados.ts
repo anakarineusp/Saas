@@ -125,6 +125,25 @@ export async function salvarPlano(plano: Partial<Plano> & { id: string }) {
   conferir(await supabase.from('planos').update(resto).eq('id', id).select())
 }
 
+/**
+ * Começa o teste já com cartão guardado. Os dados do cartão vão direto para a
+ * empresa de pagamentos: não passam pelo nosso banco em momento nenhum.
+ */
+export async function iniciarTesteComCartao(dados: {
+  plano: string
+  cartao: { nome: string; numero: string; mes: string; ano: string; codigo: string }
+  titular: { nome: string; documento: string; cep: string; numero: string }
+}) {
+  const { data, error } = await supabase.functions.invoke('iniciar-teste', { body: dados })
+  if (error) {
+    throw new Error(
+      (data as { erro?: string })?.erro ??
+        'Não consegui validar o cartão agora. Confira os números e tente de novo.',
+    )
+  }
+  return data as { ok: boolean; primeira_cobranca: string }
+}
+
 /** Fala com o servidor que cria a assinatura na empresa de pagamentos. */
 export async function abrirCheckout(plano: string, ciclo: Ciclo = 'mensal'): Promise<string> {
   const { data, error } = await supabase.functions.invoke('assinar', { body: { plano, ciclo } })
