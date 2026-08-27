@@ -1,12 +1,28 @@
-// A ligação com o banco de dados. As duas chaves abaixo são públicas de
+// A ligação com o banco de dados. As duas informações abaixo são públicas de
 // propósito: quem manda em quem vê o quê é o banco, não o aplicativo.
 import { createClient } from '@supabase/supabase-js'
 
-const endereco = import.meta.env.VITE_SUPABASE_URL
-const chave = import.meta.env.VITE_SUPABASE_ANON_KEY
+/**
+ * O painel do Supabase mostra endereços parecidos, e é fácil copiar o da
+ * "Data API", que vem com /rest/v1 no fim. O sistema acrescenta essa parte
+ * sozinho, então aqui a gente tira: assim os dois endereços funcionam.
+ */
+export function limparEndereco(valor: string): string {
+  return valor
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/(rest|auth|storage|realtime|functions)\/v1$/, '')
+    .replace(/\/+$/, '')
+}
+
+const bruto = (import.meta.env.VITE_SUPABASE_URL ?? '').trim()
+
+export const enderecoOriginal = bruto
+export const endereco = limparEndereco(bruto)
+export const chave = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').trim()
 
 export const faltaConfigurar = !endereco || !chave
 
-export const supabase = createClient(endereco ?? 'http://localhost', chave ?? 'sem-chave', {
+export const supabase = createClient(endereco || 'http://localhost', chave || 'sem-chave', {
   auth: { persistSession: true, autoRefreshToken: true },
 })

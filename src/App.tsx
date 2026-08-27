@@ -10,6 +10,7 @@ import { Cadastros } from './telas/empresa/Cadastros'
 import { Hoje } from './telas/empresa/Hoje'
 import { MeusServicos } from './telas/motorista/MeusServicos'
 import { Confirmar } from './telas/publico/Confirmar'
+import { Diagnostico } from './telas/publico/Diagnostico'
 import { Convite } from './telas/publico/Convite'
 import { CriarConta } from './telas/publico/CriarConta'
 import { Entrar } from './telas/publico/Entrar'
@@ -35,21 +36,37 @@ function FaltaConfigurar() {
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 text-center">
       <h1 className="text-xl font-bold text-slate-900">Falta ligar o banco de dados</h1>
       <p className="mt-2 text-sm text-slate-600">
-        Coloque o endereço e a chave pública do Supabase no arquivo <code>.env</code> e publique de novo.
-        O arquivo <code>.env.exemplo</code> mostra o formato.
+        Cadastre o endereço e a chave pública do Supabase em <code>VITE_SUPABASE_URL</code> e{' '}
+        <code>VITE_SUPABASE_ANON_KEY</code>, e publique o site de novo.
+      </p>
+      <p className="mt-4 text-sm">
+        <a href="/diagnostico" className="text-slate-900 underline">
+          ver a conferência da instalação
+        </a>
       </p>
     </div>
   )
 }
 
 export default function App() {
-  if (faltaConfigurar) return <FaltaConfigurar />
+  // Sem as chaves, só a página de conferência funciona — é ela que explica o que falta.
+  if (faltaConfigurar) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/diagnostico" element={<Diagnostico />} />
+          <Route path="*" element={<FaltaConfigurar />} />
+        </Routes>
+      </BrowserRouter>
+    )
+  }
 
   return (
     <BrowserRouter>
       <ProvedorDeSessao>
         <Routes>
           <Route path="/" element={<Vitrine />} />
+          <Route path="/diagnostico" element={<Diagnostico />} />
           <Route path="/entrar" element={<Entrar />} />
           <Route path="/criar-conta" element={<CriarConta />} />
           <Route path="/sua-empresa" element={<SuaEmpresa />} />
