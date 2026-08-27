@@ -4,14 +4,15 @@ import { Erro } from '../../componentes/Aviso'
 import { Botao } from '../../componentes/Botao'
 import { Campo, Entrada } from '../../componentes/Campos'
 import { MolduraPublica } from '../../componentes/MolduraPublica'
-import { aceitarConvite, criarConta, entrar } from '../../dados'
+import { Icone } from '../../componentes/Icone'
+import { aceitarConvite, criarConta, entrar, sair } from '../../dados'
 import { useSessao } from '../../sessao'
 import { supabase } from '../../supabase'
 
 /** O motorista cria a conta dele por um link de convite da empresa. */
 export function Convite() {
   const { token = '' } = useParams()
-  const { entrou, recarregar } = useSessao()
+  const { entrou, perfil, recarregar } = useSessao()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -36,6 +37,52 @@ export function Convite() {
     } finally {
       setIndo(false)
     }
+  }
+
+  // Quem já está dentro como dona da empresa ou como administração não pode
+  // virar motorista sem querer — e é quase sempre a empresa testando o link.
+  if (perfil && perfil.papel !== 'motorista') {
+    const quem = perfil.papel === 'dono' ? 'dona da empresa' : 'administração do sistema'
+    return (
+      <MolduraPublica
+        titulo="Este link é do motorista"
+        subtitulo={`Você está conectada como ${perfil.nome} (${quem}). Este convite serve para o motorista criar a conta dele.`}
+      >
+        <div className="space-y-4">
+          <div className="painel flex items-start gap-3 rounded-2xl p-4">
+            <Icone nome="aviso" className="mt-0.5 h-4 w-4 shrink-0 text-atencao" />
+            <p className="text-sm leading-relaxed text-fraca">
+              O jeito certo é mandar este endereço para o motorista pelo WhatsApp: ele abre no celular dele e cria a
+              conta com o e-mail dele.
+            </p>
+          </div>
+
+          <Botao
+            tom="contorno"
+            largo
+            onClick={() => {
+              void navigator.clipboard
+                .writeText(window.location.href)
+                .then(() => window.alert('Link copiado. Mande para o motorista.'))
+                .catch(() => window.alert(window.location.href))
+            }}
+          >
+            <Icone nome="copiar" className="h-4 w-4" />
+            Copiar o link para mandar ao motorista
+          </Botao>
+
+          <Botao
+            tom="fantasma"
+            largo
+            onClick={() => {
+              void sair().then(() => window.location.reload())
+            }}
+          >
+            Sair da minha conta e usar este convite aqui
+          </Botao>
+        </div>
+      </MolduraPublica>
+    )
   }
 
   return (

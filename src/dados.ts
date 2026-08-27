@@ -30,7 +30,12 @@ function traduzir(mensagem: string): string {
   if (/User already registered/i.test(mensagem)) return 'Já existe uma conta com esse e-mail.'
   if (/Password should be at least/i.test(mensagem)) return 'A senha precisa ter pelo menos 6 letras ou números.'
   if (/Email not confirmed/i.test(mensagem)) return 'Confirme o e-mail antes de entrar.'
-  if (/duplicate key/i.test(mensagem)) return 'Esse registro já existe.'
+  if (/motoristas_perfil_unico/i.test(mensagem)) {
+    return 'Esta conta já está ligada a outro motorista desta empresa. Use um e-mail diferente.'
+  }
+  if (/duplicate key/i.test(mensagem)) {
+    return 'Já existe um cadastro igual a este. Confira se não foi salvo duas vezes.'
+  }
   return mensagem
 }
 

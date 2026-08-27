@@ -171,6 +171,48 @@ begin;
 commit;
 
 \echo ''
+\echo '— O convite de motorista aberto pela pessoa errada'
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"c1111111-1111-1111-1111-111111111111"}';
+  insert into public.convites (empresa_id, motorista_id) values (:'empresa', :'motorista')
+  returning token as convite \gset
+commit;
+
+begin;
+  -- a própria dona, logada, abrindo o link
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"c1111111-1111-1111-1111-111111111111"}';
+  select testes.confere_erro(
+    'select public.aceitar_convite(''' || :'convite' || ''', ''Ana'')',
+    'a dona da empresa não vira motorista por engano');
+commit;
+
+begin;
+  -- a administração do sistema, logada, abrindo o link
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"c9999999-9999-9999-9999-999999999999"}';
+  select testes.confere_erro(
+    'select public.aceitar_convite(''' || :'convite' || ''', ''Admin'')',
+    'nem a administração do sistema');
+commit;
+
+begin;
+  -- clicar duas vezes no próprio convite não é erro
+  set local role postgres;
+  insert into auth.users (id, email) values ('c5555555-5555-5555-5555-555555555555','jocemar@x.com')
+    on conflict do nothing;
+commit;
+
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"c5555555-5555-5555-5555-555555555555"}';
+  select public.aceitar_convite(:'convite', 'Jocemar');
+  select testes.confere((select papel from public.perfis where id = auth.uid()) = 'motorista',
+                        'o motorista de verdade aceita normalmente');
+rollback;
+
+\echo ''
 \echo '— A administração cuidando dos clientes'
 begin;
   set local role authenticated;
