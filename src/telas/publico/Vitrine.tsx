@@ -3,103 +3,13 @@ import { Link } from 'react-router-dom'
 import { BotaoLink } from '../../componentes/Botao'
 import { BotaoTema } from '../../componentes/BotaoTema'
 import { EstradaNoturna } from '../../componentes/EstradaNoturna'
-import { Icone, type NomeDeIcone } from '../../componentes/Icone'
+import { Icone } from '../../componentes/Icone'
 import { Suporte } from '../../componentes/Suporte'
-import { NOME_DO_PRODUTO } from '../../config'
-import { planos as buscarPlanos } from '../../dados'
+import { conteudoDaVitrine, planos as buscarPlanos } from '../../dados'
 import { moeda } from '../../lib/formato'
 import { useRevelarAoRolar } from '../../lib/revelar'
 import type { Ciclo, Plano } from '../../tipos'
-
-const DORES = [
-  {
-    titulo: 'A ligação das onze da noite',
-    texto: 'Conferindo no caderno quem leva o voo das seis, e ligando para três motoristas até alguém atender.',
-  },
-  {
-    titulo: 'O transfer que furou',
-    texto: 'Dois serviços marcados no mesmo horário para o mesmo carro — e o hotel ligando atrás do passageiro.',
-  },
-  {
-    titulo: 'O acerto que não fecha',
-    texto: 'Fim do mês somando percentual de motorista na calculadora, e sempre falta um serviço em algum lugar.',
-  },
-  {
-    titulo: 'O valor que vazou',
-    texto: 'O motorista viu por acaso quanto o cliente pagou — e a conversa do mês seguinte começou torta.',
-  },
-]
-
-const PASSOS: { icone: NomeDeIcone; titulo: string; texto: string }[] = [
-  {
-    icone: 'mais',
-    titulo: 'Lance o serviço',
-    texto: 'Data, hora, passageiro, rota e valor. Vinte segundos — e o transfer de volta sai de um toque.',
-  },
-  {
-    icone: 'carro',
-    titulo: 'Escale quem está livre',
-    texto: 'A tela mostra quem já tem serviço naquele horário e em qual carro o grupo cabe. Sem conflito.',
-  },
-  {
-    icone: 'whatsapp',
-    titulo: 'Avise pelo WhatsApp',
-    texto: 'A mensagem sai pronta. O motorista abre o link e confirma — sem instalar nada, sem criar conta.',
-  },
-  {
-    icone: 'dinheiro',
-    titulo: 'Feche o mês sozinho',
-    texto: 'Quanto cada motorista recebe, quanto cada hotel indicou, quanto sobrou para você. Pronto.',
-  },
-]
-
-const DIFERENCAS: { icone: NomeDeIcone; titulo: string; texto: string }[] = [
-  {
-    icone: 'usuario',
-    titulo: 'O motorista nunca vê o valor do cliente',
-    texto:
-      'Ele enxerga o serviço e o valor dele, mais nada. Não é uma tela escondida: no banco de dados o motorista não tem permissão de chegar nesse número.',
-  },
-  {
-    icone: 'raio',
-    titulo: 'Ninguém instala nada',
-    texto:
-      'O motorista recebe um link no WhatsApp e confirma ali mesmo. Sem aplicativo, sem senha, sem treinar equipe.',
-  },
-  {
-    icone: 'relogio',
-    titulo: 'Conflito de horário some',
-    texto:
-      'Na hora de escalar, o sistema avisa se o motorista tem outro serviço a menos de duas horas e se o grupo não cabe no carro.',
-  },
-]
-
-const PERGUNTAS = [
-  {
-    p: 'Preciso instalar alguma coisa?',
-    r: 'Não. Funciona pelo navegador, no celular e no computador. Dá para colocar o atalho na tela de início e abre como aplicativo.',
-  },
-  {
-    p: 'E os meus motoristas, vão conseguir usar?',
-    r: 'Eles não precisam aprender nada. Recebem um link pelo WhatsApp e tocam em "Aceito". Quem quiser pode criar conta para ver todos os serviços num lugar só, mas é opcional.',
-  },
-  {
-    p: 'Como funciona o teste de 7 dias?',
-    r: 'Você se cadastra e usa tudo por 7 dias. Se não quiser continuar, é só não assinar.',
-  },
-  {
-    p: 'Posso cancelar quando quiser?',
-    r: 'Pode, sem multa e sem fidelidade. No plano anual, o valor já sai com dois meses de desconto justamente porque é um compromisso maior.',
-  },
-  {
-    p: 'Meus dados ficam misturados com os de outra empresa?',
-    r: 'Não. Cada empresa enxerga apenas o que é dela, e essa separação é garantida pelo banco de dados, não só pela tela.',
-  },
-  {
-    p: 'E se eu precisar de ajuda?',
-    r: 'Tem um botão de suporte em todas as telas, que abre uma conversa direta no WhatsApp.',
-  },
-]
+import { VITRINE_PADRAO, type ConteudoDaVitrine } from '../../vitrine'
 
 /** Um cartão de serviço igual ao do sistema — mostrar vale mais que descrever. */
 function AmostraDaTela() {
@@ -157,11 +67,16 @@ function Pergunta({ p, r }: { p: string; r: string }) {
 export function Vitrine() {
   const [planos, setPlanos] = useState<Plano[]>([])
   const [ciclo, setCiclo] = useState<Ciclo>('mensal')
+  const [c, setConteudo] = useState<ConteudoDaVitrine>(VITRINE_PADRAO)
   useRevelarAoRolar()
 
   useEffect(() => {
     void buscarPlanos().then(setPlanos).catch(() => setPlanos([]))
+    void conteudoDaVitrine().then(setConteudo).catch(() => setConteudo(VITRINE_PADRAO))
   }, [])
+
+  // A cor de destaque escolhida na administração vale só nesta página.
+  const estilo = { ['--c-destaque' as string]: c.marca.cor_destaque } as React.CSSProperties
 
   const precoDe = (p: Plano) =>
     ciclo === 'anual' ? (p.preco_anual_centavos ?? p.preco_centavos * 10) : p.preco_centavos
@@ -169,11 +84,11 @@ export function Vitrine() {
   const economiaDe = (p: Plano) => p.preco_centavos * 12 - (p.preco_anual_centavos ?? p.preco_centavos * 10)
 
   return (
-    <div className="min-h-screen bg-fundo">
+    <div className="min-h-screen bg-fundo" style={estilo}>
       <header className="sticky top-0 z-30 border-b border-borda/60 bg-fundo/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
           <span className="font-display text-lg font-bold tracking-tight text-tinta">
-            {NOME_DO_PRODUTO}
+            {c.marca.nome}
             <span className="text-destaque">.</span>
           </span>
           <div className="flex items-center gap-1">
@@ -200,36 +115,34 @@ export function Vitrine() {
           <div>
             <p className="entra inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-tenue uppercase">
               <span className="h-1 w-1 rounded-full bg-destaque" />
-              Feito para transfer turístico na serra
+              {c.topo.etiqueta}
             </p>
 
             <h1 className="entra atraso-1 font-display mt-5 text-4xl leading-[1.03] font-extrabold text-balance sm:text-6xl">
-              Sua operação inteira
+              {c.topo.titulo_1}
               <br />
-              <span className="texto-destaque">cabe numa tela.</span>
+              <span className="texto-destaque">{c.topo.titulo_2}</span>
             </h1>
 
             <p className="entra atraso-2 mt-6 max-w-prose text-lg leading-relaxed text-fraca">
-              Larga o caderno e a planilha. Lance o serviço, escale quem está livre e avise pelo WhatsApp — o
-              motorista confirma sem instalar nada, e <strong className="text-tinta">nunca vê o valor cobrado do
-              cliente</strong>.
+              {c.topo.subtitulo}
             </p>
 
             <div className="entra atraso-3 mt-8 flex flex-wrap items-center gap-3">
               <BotaoLink para="/criar-conta" tamanho="grande">
-                Testar 7 dias grátis
+                {c.topo.botao}
                 <Icone nome="seta" className="h-4 w-4" />
               </BotaoLink>
               <a
                 href="#planos"
                 className="rounded-xl border border-bordaforte px-6 py-4 text-base font-semibold text-tinta transition-colors hover:bg-superficie2"
               >
-                Ver os planos
+                {c.topo.botao_secundario}
               </a>
             </div>
 
             <ul className="entra atraso-4 mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-tenue">
-              {['Cancela quando quiser', 'Sem fidelidade', 'Suporte no WhatsApp'].map((item) => (
+              {c.topo.selos.map((item) => (
                 <li key={item} className="flex items-center gap-1.5">
                   <Icone nome="check" className="h-3.5 w-3.5 text-ok" traco={3} />
                   {item}
@@ -239,7 +152,15 @@ export function Vitrine() {
           </div>
 
           <div className="entra atraso-5 flex justify-center lg:justify-end">
-            <AmostraDaTela />
+            {c.topo.imagem ? (
+              <img
+                src={c.topo.imagem}
+                alt=""
+                className="w-full max-w-sm rounded-2xl border border-borda object-cover"
+              />
+            ) : (
+              <AmostraDaTela />
+            )}
           </div>
         </div>
       </section>
@@ -247,13 +168,13 @@ export function Vitrine() {
       {/* ---------------------------------------------------------------- dor */}
       <section className="border-t border-borda bg-fundo2/60">
         <div className="mx-auto max-w-6xl px-5 py-24">
-          <p className="revela text-xs font-bold tracking-[0.2em] text-alerta uppercase">O jeito antigo</p>
+          <p className="revela text-xs font-bold tracking-[0.2em] text-alerta uppercase">{c.dores.etiqueta}</p>
           <h2 className="revela font-display mt-3 max-w-2xl text-3xl font-bold text-balance sm:text-4xl">
-            Você não perde dinheiro por falta de cliente. Perde por falta de controle.
+            {c.dores.titulo}
           </h2>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {DORES.map((dor, i) => (
+            {c.dores.itens.map((dor, i) => (
               <div
                 key={dor.titulo}
                 className="revela flex gap-4 rounded-2xl border border-borda bg-superficie/50 p-5"
@@ -270,7 +191,7 @@ export function Vitrine() {
           </div>
 
           <p className="revela mx-auto mt-10 max-w-xl text-center text-lg text-balance text-fraca">
-            Nada disso é falta de capricho. É o caderno chegando no limite dele.
+            {c.dores.fecho}
           </p>
         </div>
       </section>
@@ -287,15 +208,15 @@ export function Vitrine() {
           </p>
 
           <ol className="relative mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {PASSOS.map((passo, i) => (
+            {c.passos.itens.map((passo, i) => (
               <li
                 key={passo.titulo}
                 className="revela painel rounded-2xl p-5"
                 style={{ transitionDelay: `${i * 70}ms` }}
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-borda text-fraca">
-                    <Icone nome={passo.icone} className="h-4.5 w-4.5" />
+                  <span className="font-display flex h-9 w-9 items-center justify-center rounded-xl border border-borda text-sm font-bold text-fraca">
+                    {i + 1}
                   </span>
                   <span className="font-display text-2xl font-extrabold text-borda tabular-nums">
                     {String(i + 1).padStart(2, '0')}
@@ -313,19 +234,16 @@ export function Vitrine() {
       <section className="border-t border-borda bg-fundo2/60">
         <div className="mx-auto max-w-6xl px-5 py-24">
           <h2 className="revela font-display text-3xl font-bold text-balance sm:text-4xl">
-            Três coisas que nenhuma planilha faz
+            {c.diferencas.titulo}
           </h2>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {DIFERENCAS.map((item, i) => (
+            {c.diferencas.itens.map((item, i) => (
               <div
                 key={item.titulo}
                 className="revela painel rounded-2xl p-6"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-borda text-fraca">
-                  <Icone nome={item.icone} className="h-5 w-5" />
-                </span>
                 <h3 className="font-display mt-4 text-lg font-semibold text-balance text-tinta">{item.titulo}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-fraca">{item.texto}</p>
               </div>
@@ -409,7 +327,11 @@ export function Vitrine() {
                   </ul>
 
                   <div className="mt-6">
-                    <BotaoLink para="/criar-conta" tom={destaque ? 'principal' : 'contorno'} largo>
+                    <BotaoLink
+                      para={`/criar-conta?plano=${plano.id}`}
+                      tom={destaque ? 'principal' : 'contorno'}
+                      largo
+                    >
                       Começar o teste
                     </BotaoLink>
                   </div>
@@ -430,16 +352,11 @@ export function Vitrine() {
               <Icone nome="usuario" className="h-6 w-6" />
             </span>
             <div className="flex-1">
-              <h2 className="font-display text-xl font-bold text-balance text-tinta">
-                Indicou, os dois ganham um mês
-              </h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-fraca">
-                Toda empresa recebe um código. Quando alguém entra pelo seu código e vira cliente, você ganha um mês
-                grátis — e essa pessoa também. Sem limite de indicações.
-              </p>
+              <h2 className="font-display text-xl font-bold text-balance text-tinta">{c.indicacao.titulo}</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-fraca">{c.indicacao.texto}</p>
             </div>
             <BotaoLink para="/criar-conta" tom="contorno">
-              Quero meu código
+              {c.indicacao.botao}
             </BotaoLink>
           </div>
         </div>
@@ -449,7 +366,7 @@ export function Vitrine() {
       <section className="mx-auto max-w-3xl px-5 py-24">
         <h2 className="revela font-display text-3xl font-bold sm:text-4xl">Perguntas que sempre fazem</h2>
         <div className="revela mt-8">
-          {PERGUNTAS.map((item) => (
+          {c.perguntas.map((item) => (
             <Pergunta key={item.p} {...item} />
           ))}
         </div>
@@ -459,26 +376,23 @@ export function Vitrine() {
       <section className="relative overflow-hidden border-t border-borda">
         <div className="aurora relative mx-auto max-w-3xl px-5 py-24 text-center">
           <h2 className="revela font-display relative text-3xl font-bold text-balance sm:text-5xl">
-            Amanhã de manhã, sem caderno.
+            {c.chamada.titulo}
           </h2>
-          <p className="revela relative mx-auto mt-4 max-w-md text-lg text-fraca">
-            Leva menos de dois minutos para cadastrar a empresa e lançar o primeiro serviço.
-          </p>
+          <p className="revela relative mx-auto mt-4 max-w-md text-lg text-fraca">{c.chamada.texto}</p>
           <div className="revela relative mt-8 flex justify-center">
             <BotaoLink para="/criar-conta" tamanho="grande">
-              Testar 7 dias grátis
+              {c.chamada.botao}
               <Icone nome="seta" className="h-4 w-4" />
             </BotaoLink>
           </div>
-          <p className="revela relative mt-4 text-sm text-tenue">Cancela quando quiser. Sem fidelidade.</p>
+          <p className="revela relative mt-4 text-sm text-tenue">{c.chamada.rodape}</p>
         </div>
       </section>
 
       <footer className="border-t border-borda">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-8 text-sm text-tenue sm:flex-row sm:items-center sm:justify-between">
           <span>
-            <span className="font-display font-bold text-fraca">{NOME_DO_PRODUTO}</span> · sistema para empresas de
-            transfer turístico
+            <span className="font-display font-bold text-fraca">{c.marca.nome}</span> · {c.rodape}
           </span>
           <span className="flex gap-4">
             <Link to="/entrar" className="hover:text-tinta">

@@ -14,6 +14,7 @@ import {
   abrirWhatsApp, linkDeAcompanhamento as enderecoDeAcompanhamento, linkDeAvaliacao as enderecoDeAvaliacao,
   linkDeConfirmacao, mensagemDeAcompanhamento, mensagemDeAvaliacao, mensagemParaIndicador, mensagemParaMotorista,
 } from '../../lib/whatsapp'
+import { useSessao } from '../../sessao'
 import type { Indicador, Motorista, Servico } from '../../tipos'
 
 // Um ponto colorido basta: o texto continua legível e a tela não vira semáforo.
@@ -39,6 +40,8 @@ export function Atribuir({
   aoFechar: () => void
 }) {
   const avisar = useAvisar()
+  const { assinatura } = useSessao()
+  const solo = assinatura?.modo === 'solo'
   const [erro, setErro] = useState('')
   const [indo, setIndo] = useState(false)
 
@@ -160,23 +163,28 @@ export function Atribuir({
         <div className="painel space-y-3 rounded-2xl p-4">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-display font-bold text-tinta">
-              {motorista.nome} <span className="font-normal text-fraca">· {motorista.veiculo}</span>
+              {solo ? 'Você' : motorista.nome}{' '}
+              <span className="font-normal text-fraca">· {motorista.veiculo}</span>
             </span>
-            <span className="font-display text-sm font-bold text-tinta tabular-nums">
-              {moeda(servico.valor_motorista_centavos)}
-            </span>
+            {!solo && (
+              <span className="font-display text-sm font-bold text-tinta tabular-nums">
+                {moeda(servico.valor_motorista_centavos)}
+              </span>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Botao tom="ok" onClick={() => void avisarMotorista()}>
-              <Icone nome="whatsapp" className="h-4 w-4" />
-              Avisar
-            </Botao>
-            <Botao tom="contorno" onClick={() => void copiarLink()}>
-              <Icone nome="copiar" className="h-4 w-4" />
-              Copiar link
-            </Botao>
-          </div>
+          {!solo && (
+            <div className="grid grid-cols-2 gap-2">
+              <Botao tom="ok" onClick={() => void avisarMotorista()}>
+                <Icone nome="whatsapp" className="h-4 w-4" />
+                Avisar
+              </Botao>
+              <Botao tom="contorno" onClick={() => void copiarLink()}>
+                <Icone nome="copiar" className="h-4 w-4" />
+                Copiar link
+              </Botao>
+            </div>
+          )}
 
           <Botao
             tom="contorno"
@@ -230,7 +238,7 @@ export function Atribuir({
         </Botao>
       )}
 
-      {!encerrado && (
+      {!encerrado && !solo && (
         <div>
           <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">
             {motorista ? 'Trocar motorista' : 'Escolher motorista'}

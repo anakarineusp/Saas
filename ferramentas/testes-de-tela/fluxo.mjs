@@ -58,7 +58,8 @@ await p.evaluate(async () => {
   window.scrollTo(0, 0)
 })
 await p.waitForTimeout(700)
-confere((await texto(p)).includes('Profissional'), 'a vitrine mostra os planos vindos do banco')
+confere(contem(await texto(p), 'Equipe') && contem(await texto(p), 'Solo'),
+        'a vitrine mostra os planos vindos do banco')
 await p.screenshot({ path: `${FOTOS}/n1-vitrine.png`, fullPage: true })
 
 // ---------- 2. criar conta da empresa ----------
@@ -69,6 +70,8 @@ await p.getByRole('button', { name: 'Criar minha conta' }).click()
 await p.waitForURL('**/sua-empresa', { timeout: 15000 })
 await p.screenshot({ path: `${FOTOS}/n2-sua-empresa.png`, fullPage: true })
 
+await p.getByRole('button', { name: /Equipe/ }).click()
+await p.waitForTimeout(300)
 await p.getByLabel('Nome da empresa').fill('Serra Transfer')
 await p.getByLabel('Seu nome').fill('Ana Karine')
 await p.getByLabel('WhatsApp').fill('5554999000001')
@@ -82,8 +85,11 @@ await p.screenshot({ path: `${FOTOS}/n3-app-vazio.png`, fullPage: true })
 
 // ---------- 3. cadastros ----------
 await p.getByRole('link', { name: 'Cadastros', exact: true }).click()
-await p.waitForTimeout(600)
+await p.waitForTimeout(700)
+await p.getByRole('button', { name: 'Motoristas' }).click()
+await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Novo' }).click()
+await p.waitForTimeout(500)
 await p.getByLabel('Nome').fill('Jocemar')
 await p.getByLabel(/WhatsApp/).fill('5554999120031')
 await p.getByLabel('Veículo').fill('Spin')
@@ -94,7 +100,9 @@ await p.waitForTimeout(900)
 confere((await texto(p)).includes('Spin · 6 lugares · 40%'), 'motorista cadastrado no banco')
 
 await p.getByRole('button', { name: 'Indicadores' }).click()
+await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Novo' }).click()
+await p.waitForTimeout(400)
 await p.getByLabel('Nome').fill('Pousada Vila Suíça')
 await p.getByLabel(/WhatsApp/).fill('555432958120')
 await p.getByLabel(/Comissão/).fill('10')
@@ -103,7 +111,9 @@ await p.waitForTimeout(900)
 confere((await texto(p)).includes('Comissão de 10%'), 'indicador cadastrado no banco')
 
 await p.getByRole('button', { name: 'Serviços' }).click()
+await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Novo' }).click()
+await p.waitForTimeout(400)
 const hoje = new Date().toISOString().slice(0, 10)
 await p.getByLabel('Data').fill(hoje)
 await p.getByLabel('Hora').fill('14:20')
@@ -186,12 +196,14 @@ await p.waitForTimeout(800)
 const assinatura = await texto(p)
 confere(assinatura.includes('teste grátis') || assinatura.includes('Faltam'), 'a tela de assinatura mostra o teste correndo')
 confere(contem(assinatura, 'Indique e ganhe'), 'a tela de assinatura mostra o código de indicação')
-confere(assinatura.includes('R$ 199,00'), 'a tela de assinatura mostra os planos')
+confere(assinatura.includes('R$ 149,00'), 'a tela de assinatura mostra os planos')
 await p.screenshot({ path: `${FOTOS}/n10-assinatura.png`, fullPage: true })
 
 // ---------- 10. convite do motorista ----------
 await p.goto(`${RAIZ}/app/cadastros`, { waitUntil: 'networkidle' })
 await p.waitForTimeout(900)
+await p.getByRole('button', { name: 'Motoristas' }).click()
+await p.waitForTimeout(500)
 await p.getByRole('button', { name: /criar link de acesso/ }).click()
 await p.waitForTimeout(900)
 const textoConvite = await texto(p)
@@ -218,7 +230,9 @@ await pc.screenshot({ path: `${FOTOS}/n11-area-motorista.png`, fullPage: true })
 await p.goto(`${RAIZ}/app/cadastros`, { waitUntil: 'networkidle' })
 await p.waitForTimeout(900)
 await p.getByRole('button', { name: 'Preços' }).click()
+await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Novo' }).click()
+await p.waitForTimeout(400)
 await p.getByLabel('Nome da rota').fill('POA → Gramado')
 await p.getByLabel('Destino').fill('Gramado')
 await p.getByLabel(/Preço \(R\$\)/).fill('520,00')
@@ -305,6 +319,8 @@ confere(contem(await pp.innerText('body'), 'Thank you'), 'e consegue enviar a no
 // a nota aparece na ficha do motorista
 await p.goto(`${RAIZ}/app/cadastros`, { waitUntil: 'networkidle' })
 await p.waitForTimeout(1000)
+await p.getByRole('button', { name: 'Motoristas' }).click()
+await p.waitForTimeout(600)
 confere(contem(await texto(p), '★ 5.0'), 'a nota entra na ficha do motorista')
 
 // ---------- 11. o painel de quem vende o sistema ----------
@@ -329,7 +345,7 @@ const empresaId = execSync(
 execSync(
   `PGPASSWORD=transfer psql -h 127.0.0.1 -U transfer -d ${process.env.BANCO ?? 'transfer_local'} -v ON_ERROR_STOP=1 -c ` +
   `"select public.processar_evento_pagamento('asaas', jsonb_build_object('id','evt_e2e','event','PAYMENT_CONFIRMED','payment',` +
-  `jsonb_build_object('id','pay_e2e','value',199.00,'billingType','PIX','dueDate',current_date::text,'paymentDate',current_date::text,'externalReference','${empresaId}')))"`,
+  `jsonb_build_object('id','pay_e2e','value',299.00,'billingType','PIX','dueDate',current_date::text,'paymentDate',current_date::text,'externalReference','${empresaId}')))"`,
   { stdio: 'pipe', shell: '/bin/bash' },
 )
 
@@ -345,7 +361,7 @@ await pa.waitForTimeout(1200)
 await pa.getByRole('button', { name: 'Números', exact: true }).click()
 await pa.waitForTimeout(700)
 const painelAdmin = (await pa.innerText('body')).replace(/\u00a0/g, ' ')
-confere(painelAdmin.includes('R$ 199,00'), 'o painel mostra o dinheiro recebido no mês')
+confere(painelAdmin.includes('R$ 299,00'), 'o painel mostra o dinheiro recebido no mês')
 await pa.screenshot({ path: `${FOTOS}/n12-admin-clientes.png`, fullPage: true })
 
 confere(contem(painelAdmin, 'Receita recorrente'), 'o painel mostra os indicadores do negócio')

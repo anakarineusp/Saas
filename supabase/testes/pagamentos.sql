@@ -11,8 +11,8 @@ begin;
   set local role authenticated;
   set local request.jwt.claims = '{"sub":"44444444-4444-4444-4444-444444444444"}';
   select public.criar_empresa('Serra Gramado Turismo', 'Carla Menegotto', '5554999000004') as empresa \gset
-  select public.escolher_plano('profissional');
-  select testes.confere((select plano_id from public.minha_assinatura) = 'profissional', 'a empresa escolheu o plano Profissional');
+  select public.escolher_plano('frota');
+  select testes.confere((select plano_id from public.minha_assinatura) = 'frota', 'a empresa escolheu o plano Frota');
 commit;
 
 \echo ''
@@ -24,7 +24,7 @@ begin;
       'id', 'evt_001', 'event', 'PAYMENT_CREATED',
       'payment', jsonb_build_object(
         'id', 'pay_001', 'customer', 'cus_001', 'subscription', 'sub_001',
-        'value', 199.00, 'billingType', 'PIX', 'dueDate', to_char(current_date, 'YYYY-MM-DD'),
+        'value', 299.00, 'billingType', 'PIX', 'dueDate', to_char(current_date, 'YYYY-MM-DD'),
         'externalReference', :'empresa'
       ))) = 'ok', 'o aviso de cobrança criada foi aceito');
 
@@ -43,7 +43,7 @@ begin;
       'id', 'evt_002', 'event', 'PAYMENT_CONFIRMED',
       'payment', jsonb_build_object(
         'id', 'pay_001', 'customer', 'cus_001', 'subscription', 'sub_001',
-        'value', 199.00, 'billingType', 'PIX',
+        'value', 299.00, 'billingType', 'PIX',
         'dueDate', to_char(current_date, 'YYYY-MM-DD'),
         'paymentDate', to_char(current_date, 'YYYY-MM-DD'),
         'externalReference', :'empresa'
@@ -51,8 +51,8 @@ begin;
 
   select testes.confere((select status from public.pagamentos where provedor_cobranca_id = 'pay_001') = 'pago',
                         'a cobrança virou paga');
-  select testes.confere((select valor_centavos from public.pagamentos where provedor_cobranca_id = 'pay_001') = 19900,
-                        'o valor foi guardado certo: R$ 199,00');
+  select testes.confere((select valor_centavos from public.pagamentos where provedor_cobranca_id = 'pay_001') = 29900,
+                        'o valor foi guardado certo: R$ 299,00');
   select testes.confere((select count(*) from public.pagamentos where provedor_cobranca_id = 'pay_001') = 1,
                         'a mesma cobrança não virou duas linhas');
   select testes.confere((select status from public.assinaturas where empresa_id = :'empresa') = 'ativa',
@@ -69,7 +69,7 @@ begin;
   select testes.confere(
     public.processar_evento_pagamento('asaas', jsonb_build_object(
       'id', 'evt_002', 'event', 'PAYMENT_CONFIRMED',
-      'payment', jsonb_build_object('id', 'pay_001', 'value', 199.00, 'externalReference', :'empresa')
+      'payment', jsonb_build_object('id', 'pay_001', 'value', 299.00, 'externalReference', :'empresa')
     )) = 'repetido', 'o aviso repetido é reconhecido e ignorado');
   select testes.confere((select count(*) from public.pagamentos where empresa_id = :'empresa') = 1,
                         'continua havendo uma cobrança só');
@@ -82,7 +82,7 @@ begin;
   select public.processar_evento_pagamento('asaas', jsonb_build_object(
     'id', 'evt_003', 'event', 'PAYMENT_OVERDUE',
     'payment', jsonb_build_object(
-      'id', 'pay_002', 'value', 199.00, 'billingType', 'BOLETO',
+      'id', 'pay_002', 'value', 299.00, 'billingType', 'BOLETO',
       'dueDate', to_char(current_date - 5, 'YYYY-MM-DD'), 'externalReference', :'empresa')));
 
   select testes.confere((select status from public.assinaturas where empresa_id = :'empresa') = 'atrasada',
@@ -97,7 +97,7 @@ begin;
   set local role postgres;
   select public.processar_evento_pagamento('asaas', jsonb_build_object(
     'id', 'evt_004', 'event', 'PAYMENT_REFUNDED',
-    'payment', jsonb_build_object('id', 'pay_001', 'value', 199.00, 'externalReference', :'empresa')));
+    'payment', jsonb_build_object('id', 'pay_001', 'value', 299.00, 'externalReference', :'empresa')));
 
   select testes.confere((select status from public.assinaturas where empresa_id = :'empresa') = 'cancelada',
                         'o estorno cancela a assinatura');
@@ -153,17 +153,22 @@ begin;
   set local role authenticated;
   set local request.jwt.claims = '{"sub":"55555555-5555-5555-5555-555555555555"}';
   select public.criar_empresa('Canela Transfer', 'Paulo Bertoldo') as empresa2 \gset
+
+  -- e o pagamento anual também é reconhecido
+
 commit;
 
 begin;
   set local role postgres;
   select public.processar_evento_pagamento('asaas', jsonb_build_object(
     'id', 'evt_010', 'event', 'PAYMENT_CONFIRMED',
-    'payment', jsonb_build_object('id', 'pay_010', 'value', 349.00, 'billingType', 'CREDIT_CARD',
+    'payment', jsonb_build_object('id', 'pay_010', 'value', 299.00, 'billingType', 'CREDIT_CARD',
       'paymentDate', to_char(current_date, 'YYYY-MM-DD'), 'externalReference', :'empresa2')));
 
   select testes.confere((select plano_id from public.assinaturas where empresa_id = :'empresa2') = 'frota',
-                        'o plano foi descoberto pelo valor pago (R$ 349,00 = Frota)');
+                        'o valor pago decide o plano (R$ 299,00 = Frota)');
+  select testes.confere((select ciclo from public.assinaturas where empresa_id = :'empresa2') = 'mensal',
+                        'e o ciclo continua mensal');
 rollback;
 
 \echo ''
@@ -176,9 +181,9 @@ begin;
   set local role authenticated;
   set local request.jwt.claims = '{"sub":"99999999-9999-9999-9999-999999999999"}';
   select testes.confere((select assinantes from public.painel_resumo) = 1, 'o painel mostra 1 assinante pagante');
-  select testes.confere((select recebido_mes_centavos from public.painel_resumo) = 19900,
-                        'o painel mostra R$ 199,00 recebidos no mês');
-  select testes.confere((select recorrente_centavos from public.painel_resumo) = 19900,
+  select testes.confere((select recebido_mes_centavos from public.painel_resumo) = 29900,
+                        'o painel mostra R$ 299,00 recebidos no mês');
+  select testes.confere((select recorrente_centavos from public.painel_resumo) = 29900,
                         'o painel mostra a receita recorrente');
 commit;
 

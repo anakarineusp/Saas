@@ -1,5 +1,6 @@
 // Único lugar do aplicativo que conversa com o banco de dados.
 import { supabase, VERSAO_DO_BANCO_ESPERADA } from './supabase'
+import { juntarComPadrao, type ConteudoDaVitrine } from './vitrine'
 import type {
   Acompanhamento, Ajustes, Assinatura, AvaliacaoDoLink, Ciclo, Cliente, Cupom, Indicador, Indicadores,
   MesDeReceita, Motorista, Pendencia, Perfil, Plano, Reputacao, Resumo, Rota, Servico, ServicoDoLink,
@@ -75,6 +76,7 @@ export async function criarEmpresa(dados: {
   documento?: string
   cidade?: string
   indicacao?: string
+  plano?: string
 }) {
   return conferir(
     await supabase.rpc('criar_empresa', {
@@ -84,6 +86,7 @@ export async function criarEmpresa(dados: {
       p_documento: dados.documento ?? null,
       p_cidade: dados.cidade ?? null,
       p_indicacao: dados.indicacao ?? null,
+      p_plano: dados.plano ?? null,
     }),
   )
 }
@@ -320,6 +323,36 @@ export async function pagamentos() {
   ) ?? []
 }
 
+// ------------------------------------------------------ conteúdo da vitrine
+
+export async function conteudoDaVitrine(): Promise<ConteudoDaVitrine> {
+  const { data } = await supabase.from('vitrine').select('conteudo').limit(1)
+  return juntarComPadrao((data?.[0] as { conteudo: unknown } | undefined)?.conteudo)
+}
+
+export async function salvarVitrine(conteudo: ConteudoDaVitrine) {
+  conferir(
+    await supabase
+      .from('vitrine')
+      .update({ conteudo, atualizada_em: new Date().toISOString() })
+      .eq('id', 1)
+      .select(),
+  )
+}
+
+/** Manda uma imagem para o depósito de arquivos e devolve o endereço público. */
+export async function enviarImagemDaVitrine(arquivo: File): Promise<string> {
+  const nome = `${Date.now()}-${arquivo.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`
+  const { error } = await supabase.storage.from('vitrine').upload(nome, arquivo, { upsert: true })
+  if (error) {
+    throw new Error(
+      'Não consegui guardar a imagem. Confira se o arquivo do banco foi rodado por completo, ou use um endereço de imagem.',
+    )
+  }
+  const { data } = supabase.storage.from('vitrine').getPublicUrl(nome)
+  return data.publicUrl
+}
+
 // ---------------------------------------------------- avaliação e reputação
 
 export async function linkDeAvaliacao(servicoId: string): Promise<string> {
@@ -347,6 +380,11 @@ export async function avaliar(dados: {
       p_comentario: dados.comentario ?? null,
     }),
   )
+}
+
+/** No plano Solo, o dono vira o motorista dele mesmo. */
+export async function euSouOMotorista(veiculo: string, lugares: number): Promise<string> {
+  return conferir(await supabase.rpc('eu_sou_o_motorista', { p_veiculo: veiculo, p_lugares: lugares }))
 }
 
 export async function reputacao(): Promise<Reputacao[]> {

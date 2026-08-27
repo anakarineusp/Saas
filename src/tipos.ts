@@ -82,6 +82,8 @@ export type Plano = {
   ativo: boolean
 }
 
+export type Modo = 'solo' | 'equipe'
+
 export type Assinatura = {
   empresa_id: string
   empresa: string
@@ -89,6 +91,9 @@ export type Assinatura = {
   ciclo: Ciclo
   plano_id: string | null
   plano: string | null
+  modo: Modo
+  limite_motoristas: number | null
+  motoristas_cadastrados: number
   preco_centavos: number | null
   proxima_cobranca: string | null
   teste_termina_em: string

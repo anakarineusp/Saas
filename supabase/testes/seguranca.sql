@@ -171,12 +171,15 @@ begin;
   set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111"}';
   insert into public.motoristas (empresa_id, nome, telefone, veiculo, lugares, percentual)
   values (:'empresa_ana', 'Anderson', '5554999845512', 'Spin', 6, 40),
-         (:'empresa_ana', 'Luciane', '5554999233470', 'Onix', 4, 35);
-  select testes.confere((select count(*) from public.motoristas) = 3, 'no teste grátis cabem 3 motoristas');
+         (:'empresa_ana', 'Luciane', '5554999233470', 'Onix', 4, 35),
+         (:'empresa_ana', 'Vanderlei', '5554999671208', 'Sprinter', 15, 45),
+         (:'empresa_ana', 'Cleber', '5554999550022', 'Spin', 6, 40);
+  select testes.confere((select count(*) from public.motoristas) = 5,
+                        'no plano Equipe do teste grátis cabem 5 motoristas');
   select testes.confere_erro(
     'insert into public.motoristas (empresa_id, nome, telefone, veiculo, lugares, percentual)
-     values (''' || :'empresa_ana' || ''', ''Vanderlei'', ''5554999671208'', ''Sprinter'', 15, 45)',
-    'o quarto motorista é barrado pelo limite do plano');
+     values (''' || :'empresa_ana' || ''', ''Sexto'', ''5554999660033'', ''Spin'', 6, 40)',
+    'o sexto motorista é barrado pelo limite do plano');
 commit;
 
 \echo ''
@@ -195,7 +198,7 @@ rollback;
 
 begin;
   set local role postgres;
-  update public.assinaturas set status = 'ativa', plano_id = 'profissional' where empresa_id = :'empresa_ana';
+  update public.assinaturas set status = 'ativa', plano_id = 'frota' where empresa_id = :'empresa_ana';
   update public.empresas set teste_termina_em = now() - interval '1 day' where id = :'empresa_ana';
 
   set local role authenticated;
@@ -205,8 +208,8 @@ begin;
                           'Centro de Gramado', 'Lago Negro', 30000)) is not null,
                         'com plano ativo grava serviço de novo');
   insert into public.motoristas (empresa_id, nome, telefone, veiculo, lugares, percentual)
-  values (:'empresa_ana', 'Vanderlei', '5554999671208', 'Sprinter', 15, 45);
-  select testes.confere((select count(*) from public.motoristas) = 4, 'no plano Profissional não há limite de motoristas');
+  values (:'empresa_ana', 'Sexto', '5554999660033', 'Spin', 6, 40);
+  select testes.confere((select count(*) from public.motoristas) = 6, 'no plano Frota não há limite de motoristas');
 rollback;
 
 \echo ''

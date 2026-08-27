@@ -77,6 +77,8 @@ create trigger assinatura_ativa before insert on public.servicos
   for each row execute function app.confere_assinatura();
 
 -- Descobre o plano pelo valor pago, usado quando o pagamento chega sem plano escolhido.
+-- (o formato mudou depois; derrubada antes para o arquivo poder rodar de novo)
+drop function if exists app.plano_do_valor(int);
 create or replace function app.plano_do_valor(p_centavos int)
 returns text
 language sql stable security definer set search_path = '' as $$

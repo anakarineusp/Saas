@@ -81,16 +81,16 @@ commit;
 begin;
   set local role postgres;
   select testes.confere(
-    (select preco_anual_centavos from public.planos where id = 'profissional') = 199000,
-    'o anual do Profissional é R$ 1.990,00 — dez meses no lugar de doze');
+    (select preco_anual_centavos from public.planos where id = 'equipe') = 149000,
+    'o anual do Equipe é R$ 1.490,00 — dez meses no lugar de doze');
 
-  update public.assinaturas set ciclo = 'anual', plano_id = 'profissional', status = 'ativa'
+  update public.assinaturas set ciclo = 'anual', plano_id = 'equipe', status = 'ativa'
    where empresa_id = :'empresa_ana';
 
   set local role authenticated;
   set local request.jwt.claims = '{"sub":"a1111111-1111-1111-1111-111111111111"}';
   select testes.confere((select ciclo from public.minha_assinatura) = 'anual', 'a assinatura ficou como anual');
-  select testes.confere((select preco_centavos from public.minha_assinatura) = 199000,
+  select testes.confere((select preco_centavos from public.minha_assinatura) = 149000,
                         'e passa a mostrar o preço anual');
 rollback;
 

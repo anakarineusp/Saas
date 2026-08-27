@@ -18,9 +18,17 @@ import type { Indicador, Motorista, Reputacao, Rota, Servico, TipoServico } from
 type Secao = 'motoristas' | 'indicadores' | 'servicos' | 'rotas'
 
 const SECOES: { id: Secao; rotulo: string }[] = [
+  { id: 'servicos', rotulo: 'Serviços' },
   { id: 'motoristas', rotulo: 'Motoristas' },
   { id: 'indicadores', rotulo: 'Indicadores' },
+  { id: 'rotas', rotulo: 'Preços' },
+]
+
+/** No plano Solo não existe escalar motorista: o motorista é o dono. */
+const SECOES_SOLO: { id: Secao; rotulo: string }[] = [
   { id: 'servicos', rotulo: 'Serviços' },
+  { id: 'motoristas', rotulo: 'Meu carro' },
+  { id: 'indicadores', rotulo: 'Indicadores' },
   { id: 'rotas', rotulo: 'Preços' },
 ]
 
@@ -311,10 +319,11 @@ function FormServico({
 }
 
 export function Cadastros() {
-  const { perfil } = useSessao()
+  const { perfil, assinatura } = useSessao()
+  const solo = assinatura?.modo === 'solo'
   const avisar = useAvisar()
   const empresaId = perfil?.empresa_id ?? ''
-  const [secao, setSecao] = useState<Secao>('motoristas')
+  const [secao, setSecao] = useState<Secao>('servicos')
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
   const [indicadores, setIndicadores] = useState<Indicador[]>([])
   const [servicos, setServicos] = useState<Servico[]>([])
@@ -414,8 +423,14 @@ export function Cadastros() {
     <div className="px-5 pt-6">
       <h1 className="font-display text-2xl font-bold text-tinta">Cadastros</h1>
 
-      <div className="mt-4 flex gap-1 rounded-xl border border-borda bg-superficie p-1">
-        {SECOES.map((s) => (
+      {solo && (
+        <p className="mt-3 text-sm text-fraca">
+          No plano Solo o motorista é você. Ajuste o seu carro em <strong className="text-tinta">Meu carro</strong>.
+        </p>
+      )}
+
+      <div className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-borda bg-superficie p-1">
+        {(solo ? SECOES_SOLO : SECOES).map((s) => (
           <button
             key={s.id}
             type="button"
@@ -440,10 +455,12 @@ export function Cadastros() {
         <div className="flex-1">
           <Busca valor={procura} aoMudar={setProcura} placeholder={`Procurar ${TITULOS[secao].toLowerCase()}`} />
         </div>
-        <Botao onClick={() => setEditando({ tipo: secao })}>
-          <Icone nome="mais" className="h-4 w-4" />
-          Novo
-        </Botao>
+        {!(solo && secao === 'motoristas' && motoristas.length > 0) && (
+          <Botao onClick={() => setEditando({ tipo: secao })}>
+            <Icone nome="mais" className="h-4 w-4" />
+            Novo
+          </Botao>
+        )}
       </div>
 
       <div className="mt-4 space-y-2">
@@ -459,11 +476,15 @@ export function Cadastros() {
               })()}
               aoEditar={() => setEditando({ tipo: 'motoristas', item: m })}
               aoExcluir={() => {
+                if (solo) {
+                  window.alert('No plano Solo o motorista é você — este cadastro não pode ser excluído.')
+                  return
+                }
                 if (window.confirm(`Excluir ${m.nome}? Os serviços dele ficam sem motorista.`))
                   void comErro(() => excluirMotorista(m.id), 'Motorista excluído')
               }}
               extra={
-                !m.perfil_id && (
+                !solo && !m.perfil_id && (
                   <div className="border-t border-borda px-4 py-2.5">
                     {convites[m.id] ? (
                       <p className="text-xs break-all text-tenue">

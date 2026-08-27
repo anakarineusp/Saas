@@ -1,8 +1,9 @@
+import { useEffect } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { BotaoTema } from '../../componentes/BotaoTema'
 import { Icone, type NomeDeIcone } from '../../componentes/Icone'
 import { Suporte } from '../../componentes/Suporte'
-import { sair } from '../../dados'
+import { euSouOMotorista, sair } from '../../dados'
 import { useSessao } from '../../sessao'
 
 const ABAS: { para: string; fim: boolean; rotulo: string; icone: NomeDeIcone }[] = [
@@ -13,7 +14,15 @@ const ABAS: { para: string; fim: boolean; rotulo: string; icone: NomeDeIcone }[]
 
 /** Moldura da área da empresa: aviso da assinatura, abas e sair. */
 export function Area() {
-  const { assinatura, perfil } = useSessao()
+  const { assinatura, perfil, recarregar } = useSessao()
+
+  // No plano Solo o dono é o motorista. O cadastro dele é criado sozinho, para
+  // os serviços terem dono e a conta fechar sem ele precisar entender isso.
+  useEffect(() => {
+    if (assinatura?.modo === 'solo' && assinatura.motoristas_cadastrados === 0) {
+      void euSouOMotorista('Meu carro', 4).then(() => recarregar())
+    }
+  }, [assinatura?.modo, assinatura?.motoristas_cadastrados, recarregar])
 
   const aviso =
     assinatura && !assinatura.pode_usar

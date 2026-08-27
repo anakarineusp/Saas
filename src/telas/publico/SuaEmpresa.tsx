@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { Carregando, Erro } from '../../componentes/Aviso'
 import { Botao } from '../../componentes/Botao'
 import { Campo, Entrada } from '../../componentes/Campos'
@@ -22,6 +22,8 @@ export function SuaEmpresa() {
   const [documento, setDocumento] = useState('')
   const [indicacao, setIndicacao] = useState('')
   const [cupom, setCupom] = useState('')
+  const [parametros] = useSearchParams()
+  const [planoEscolhido, setPlanoEscolhido] = useState(parametros.get('plano') ?? 'equipe')
   const [erro, setErro] = useState('')
   const [indo, setIndo] = useState(false)
 
@@ -50,7 +52,7 @@ export function SuaEmpresa() {
     setErro('')
     setIndo(true)
     try {
-      await criarEmpresa({ empresa, seuNome, telefone, cidade, documento, indicacao })
+      await criarEmpresa({ empresa, seuNome, telefone, cidade, documento, indicacao, plano: planoEscolhido })
       // O cupom é opcional: se ele não valer, o cadastro não pode ser perdido por isso.
       if (cupom.trim()) {
         try {
@@ -204,8 +206,39 @@ export function SuaEmpresa() {
           void enviar()
         }}
       >
-        <Campo rotulo="Nome da empresa">
-          <Entrada value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Serra Transfer" />
+        <div>
+          <span className="mb-1.5 block text-xs font-semibold tracking-wide text-fraca uppercase">
+            Como é a sua operação
+          </span>
+          <div className="grid gap-2">
+            {planos.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPlanoEscolhido(p.id)}
+                className={`rounded-xl border p-3.5 text-left transition-colors ${
+                  planoEscolhido === p.id ? 'border-destaque bg-superficie2' : 'border-borda hover:border-bordaforte'
+                }`}
+              >
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="font-semibold text-tinta">{p.nome}</span>
+                  <span className="text-xs text-tenue tabular-nums">{moeda(p.preco_centavos)}/mês</span>
+                </span>
+                <span className="mt-0.5 block text-xs text-fraca">{p.descricao}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-tenue">
+            Dá para trocar depois. Os 7 dias são grátis em qualquer um.
+          </p>
+        </div>
+
+        <Campo rotulo={planoEscolhido === 'solo' ? 'Nome do seu serviço' : 'Nome da empresa'}>
+          <Entrada
+            value={empresa}
+            onChange={(e) => setEmpresa(e.target.value)}
+            placeholder={planoEscolhido === 'solo' ? 'Jocemar Transfer' : 'Serra Transfer'}
+          />
         </Campo>
         <Campo rotulo="Seu nome">
           <Entrada value={seuNome} onChange={(e) => setSeuNome(e.target.value)} />

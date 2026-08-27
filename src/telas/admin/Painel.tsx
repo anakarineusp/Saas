@@ -9,6 +9,7 @@ import { Folha } from '../../componentes/Folha'
 import { GraficoDeMeses } from '../../componentes/GraficoDeMeses'
 import { Icone } from '../../componentes/Icone'
 import { Suporte } from '../../componentes/Suporte'
+import { EditorDaVitrine } from './EditorDaVitrine'
 import {
   ajustes as buscarAjustes, cupons as buscarCupons, esticarTeste, excluirCupom, excluirEmpresa,
   mudarAssinatura, painelClientes, painelIndicadores, pagamentos as buscarPagamentos,
@@ -28,7 +29,7 @@ type Pagamento = {
   criado_em: string
 }
 
-type Aba = 'numeros' | 'clientes' | 'pagamentos' | 'planos' | 'cupons' | 'ajustes'
+type Aba = 'numeros' | 'clientes' | 'pagamentos' | 'planos' | 'cupons' | 'vitrine' | 'ajustes'
 
 const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'numeros', rotulo: 'Números' },
@@ -36,6 +37,7 @@ const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'pagamentos', rotulo: 'Pagamentos' },
   { id: 'planos', rotulo: 'Planos' },
   { id: 'cupons', rotulo: 'Cupons' },
+  { id: 'vitrine', rotulo: 'Página inicial' },
   { id: 'ajustes', rotulo: 'Ajustes' },
 ]
 
@@ -598,6 +600,8 @@ export function Painel() {
           {cupons.length === 0 && <Vazio titulo="Nenhum cupom criado">Crie um para os primeiros clientes.</Vazio>}
         </div>
       )}
+
+      {aba === 'vitrine' && <EditorDaVitrine />}
 
       {/* -------------------------------------------------------------- ajustes */}
       {aba === 'ajustes' && ajustes && (

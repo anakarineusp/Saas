@@ -7,7 +7,7 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BANCO="${BANCO:-transfer_teste}"
 COMO="${COMO:-su postgres -c}"
 
-for teste in seguranca pagamentos indicacoes recursos; do
+for teste in seguranca pagamentos indicacoes recursos planos; do
   $COMO "psql -q -c 'drop database if exists $BANCO' -c 'create database $BANCO'" >/dev/null 2>&1
 
   for arquivo in "$RAIZ"/supabase/local/*.sql "$RAIZ"/supabase/migrations/*.sql; do

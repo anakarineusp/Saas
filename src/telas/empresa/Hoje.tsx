@@ -15,6 +15,8 @@ import {
 import { dataCurta, dataPorExtenso, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
 import { abrirWhatsApp, mensagemParaMotorista } from '../../lib/whatsapp'
 import { useAvisar } from '../../componentes/Avisos'
+import { useSessao } from '../../sessao'
+import { atribuirMotorista } from '../../dados'
 import type { Indicador, Motorista, Pendencia, Servico } from '../../tipos'
 import { Atribuir } from './Atribuir'
 
@@ -76,6 +78,8 @@ function Cartao({ servico, aoTocar }: { servico: Servico; aoTocar: () => void })
 
 export function Hoje() {
   const avisar = useAvisar()
+  const { assinatura } = useSessao()
+  const solo = assinatura?.modo === 'solo'
   const [dia, setDia] = useState(hojeISO())
   const [servicos, setServicos] = useState<Servico[]>([])
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
@@ -94,7 +98,18 @@ export function Hoje() {
         buscarIndicadores(),
         pendenciasDeAmanha().catch(() => []),
       ])
-      setServicos(s)
+      // No Solo não existe escalar: o serviço já sai com o dono como motorista.
+      if (solo && m.length === 1) {
+        const semDono = s.filter((x) => !x.motorista_id && x.status !== 'cancelado')
+        if (semDono.length > 0) {
+          await Promise.all(semDono.map((x) => atribuirMotorista(x.id, m[0].id)))
+          setServicos(await buscarServicos(dia, dia))
+        } else {
+          setServicos(s)
+        }
+      } else {
+        setServicos(s)
+      }
       setMotoristas(m)
       setIndicadores(i)
       setAmanha(p)
@@ -103,7 +118,7 @@ export function Hoje() {
     } finally {
       setCarregando(false)
     }
-  }, [dia])
+  }, [dia, solo])
 
   useEffect(() => {
     void carregar()
@@ -272,7 +287,7 @@ export function Hoje() {
         ))}
 
         {servicos.length === 0 &&
-          (primeiraVez ? (
+          (primeiraVez && !solo ? (
             <div className="painel rounded-2xl p-6">
               <h2 className="font-display text-lg font-bold text-tinta">Bem-vinda! Vamos em três passos</h2>
               <ol className="mt-4 space-y-3">

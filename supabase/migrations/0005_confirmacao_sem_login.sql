@@ -49,6 +49,10 @@ begin
 end;
 $$;
 
+-- (o formato desta função mudou numa migração posterior; por isso ela é
+-- derrubada antes de ser recriada, para o arquivo poder rodar mais de uma vez)
+drop function if exists public.servico_do_link(text);
+
 -- O que o motorista enxerga ao abrir o link, sem login nenhum.
 -- Repare que o valor cobrado do cliente não sai daqui de dentro.
 create or replace function public.servico_do_link(p_token text)

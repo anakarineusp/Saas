@@ -28,7 +28,7 @@ export const faltaConfigurar = !endereco || !chave
  * Sobe junto com cada migração nova. Se o banco estiver atrás disso, o site
  * avisa em vez de dar erro solto pelo caminho.
  */
-export const VERSAO_DO_BANCO_ESPERADA = 16
+export const VERSAO_DO_BANCO_ESPERADA = 19
 
 export const supabase = createClient(endereco || 'http://localhost', chave || 'sem-chave', {
   auth: { persistSession: true, autoRefreshToken: true },

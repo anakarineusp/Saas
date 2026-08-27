@@ -7,6 +7,7 @@ import {
 import {
   dataCurta, mesAtual, mesPorExtenso, mesVizinho, moeda, primeiroDiaDoMes, rotuloTipo, ultimoDiaDoMes,
 } from '../../lib/formato'
+import { useSessao } from '../../sessao'
 import type { Indicador, Motorista, Servico } from '../../tipos'
 
 function Numero({
@@ -36,6 +37,8 @@ function Numero({
 }
 
 export function Acerto() {
+  const { assinatura } = useSessao()
+  const solo = assinatura?.modo === 'solo'
   const [mes, setMes] = useState(mesAtual())
   const [servicos, setServicos] = useState<Servico[]>([])
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
@@ -100,7 +103,8 @@ export function Acerto() {
     .sort((a, b) => b.total - a.total)
 
   const comissoes = porIndicador.reduce((soma, linha) => soma + linha.total, 0)
-  const sobra = faturado - aPagar - comissoes
+  // No Solo o valor do serviço já é do dono: só saem as comissões de indicação.
+  const sobra = solo ? faturado - comissoes : faturado - aPagar - comissoes
   const margem = faturado > 0 ? Math.round((sobra / faturado) * 100) : 0
 
   if (carregando) return <Carregando />
@@ -137,18 +141,18 @@ export function Acerto() {
           valor={moeda(faturado)}
           dica={`${moeda(jaRodou)} já concluído`}
         />
-        <Numero rotulo="A pagar aos motoristas" valor={moeda(aPagar)} tom="saida" />
+        {!solo && <Numero rotulo="A pagar aos motoristas" valor={moeda(aPagar)} tom="saida" />}
         <Numero rotulo="Comissões de indicação" valor={moeda(comissoes)} tom="saida" />
         <Numero
-          rotulo="Sobra para a empresa"
+          rotulo={solo ? 'Fica com você' : 'Sobra para a empresa'}
           valor={moeda(sobra)}
           tom="destaque"
           dica={faturado > 0 ? `${margem}% do faturado` : undefined}
         />
       </div>
 
-      <p className="mt-6 mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Motoristas</p>
-      <div className="space-y-2">
+      {!solo && <p className="mt-6 mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Motoristas</p>}
+      <div className={solo ? 'hidden' : 'space-y-2'}>
         {porMotorista.map(({ motorista, servicos: meus, total }) => (
           <div key={motorista.id} className="painel overflow-hidden rounded-2xl">
             <button
