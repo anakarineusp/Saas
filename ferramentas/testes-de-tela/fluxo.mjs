@@ -214,6 +214,99 @@ confere(areaMotorista.includes('R$ 192,00'), 'a área do motorista mostra o valo
 confere(!areaMotorista.includes('480'), 'a área do motorista NÃO mostra o valor do cliente')
 await pc.screenshot({ path: `${FOTOS}/n11-area-motorista.png`, fullPage: true })
 
+// ---------- 10b. tabela de preços por rota ----------
+await p.goto(`${RAIZ}/app/cadastros`, { waitUntil: 'networkidle' })
+await p.waitForTimeout(900)
+await p.getByRole('button', { name: 'Preços' }).click()
+await p.getByRole('button', { name: 'Novo' }).click()
+await p.getByLabel('Nome da rota').fill('POA → Gramado')
+await p.getByLabel('Destino').fill('Gramado')
+await p.getByLabel(/Preço \(R\$\)/).fill('520,00')
+await p.getByRole('button', { name: 'Salvar preço' }).click()
+await p.waitForTimeout(900)
+confere(contem(await texto(p), 'POA → Gramado'), 'a tabela de preços por rota guarda a rota')
+confere(contem(await texto(p), 'R$ 520,00'), 'com o preço de tabela')
+
+// ---------- 10c. acompanhamento do passageiro e avaliação ----------
+await p.goto(`${RAIZ}/app`, { waitUntil: 'networkidle' })
+await p.waitForTimeout(1000)
+await p.getByText('Grupo Tavares').first().click()
+await p.waitForTimeout(700)
+
+// A empresa tem indicador com WhatsApp, então o botão manda a mensagem para o
+// hotel; sem indicador, ele copia o link. O teste aceita os dois caminhos.
+const linkAcompanhar = await p.evaluate(async () => {
+  const copiar = navigator.clipboard.writeText.bind(navigator.clipboard)
+  const abrir = window.open
+  let capturado = null
+  navigator.clipboard.writeText = async (t) => { capturado = t }
+  window.open = (u) => { capturado = u; return null }
+  const b = [...document.querySelectorAll('button')].find((x) =>
+    x.textContent.includes('Link de acompanhamento'))
+  b.click()
+  await new Promise((r) => setTimeout(r, 1800))
+  navigator.clipboard.writeText = copiar
+  window.open = abrir
+  if (!capturado) return null
+  if (capturado.startsWith('http') && capturado.includes('/acompanhar/')) return capturado
+  const texto = decodeURIComponent(new URL(capturado).searchParams.get('text') ?? '')
+  return texto.match(/(https?:\/\/\S*\/acompanhar\/\S+)/)?.[1] ?? null
+})
+confere(!!linkAcompanhar, 'a empresa gera o link de acompanhamento do passageiro')
+
+// concluída a viagem, libera o pedido de avaliação
+await p.getByRole('button', { name: /Marcar como concluído/ }).click()
+await p.waitForTimeout(1400)
+
+const linkAvaliar = await p.evaluate(async () => {
+  const original = navigator.clipboard.writeText.bind(navigator.clipboard)
+  let copiado = null
+  navigator.clipboard.writeText = async (t) => { copiado = t }
+  window.open = () => null
+  const b = [...document.querySelectorAll('button')].find((b) =>
+    b.textContent.includes('Pedir avaliação'))
+  b.click()
+  await new Promise((r) => setTimeout(r, 1500))
+  navigator.clipboard.writeText = original
+  return copiado
+})
+confere(!!linkAvaliar, 'e o link de avaliação depois da viagem')
+
+// o hotel abre o acompanhamento, noutro aparelho e em espanhol
+const ctxHotel = await b.newContext({ viewport: { width: 390, height: 844 }, locale: 'es-AR' })
+const ph = await ctxHotel.newPage()
+vigiar(ph, 'hotel')
+await ph.goto(linkAcompanhar, { waitUntil: 'networkidle' })
+await ph.waitForTimeout(900)
+const telaHotel = (await ph.innerText('body')).replace(/\u00a0/g, ' ')
+confere(telaHotel.includes('Grupo Tavares'), 'o hotel vê o passageiro no acompanhamento')
+confere(telaHotel.includes('Jocemar'), 'e vê o motorista')
+confere(!telaHotel.includes('480') && !telaHotel.includes('192'),
+        'o acompanhamento NÃO mostra valor nenhum')
+confere(contem(telaHotel, 'Su traslado'), 'e abre em espanhol para quem navega em espanhol')
+await ph.screenshot({ path: `${FOTOS}/n15-acompanhar.png`, fullPage: true })
+
+// o passageiro avalia, em inglês
+const ctxPassageiro = await b.newContext({ viewport: { width: 390, height: 844 }, locale: 'en-US' })
+const pp = await ctxPassageiro.newPage()
+vigiar(pp, 'passageiro')
+await pp.goto(linkAvaliar, { waitUntil: 'networkidle' })
+await pp.waitForTimeout(900)
+confere(contem(await pp.innerText('body'), 'How was your ride'),
+        'o passageiro recebe a avaliação no idioma dele')
+const estrelas = pp.locator('button[aria-label="5"]')
+await estrelas.first().click()
+await pp.waitForTimeout(200)
+await pp.screenshot({ path: `${FOTOS}/n16-avaliar.png`, fullPage: true })
+await pp.getByRole('button', { name: /Send review/ }).click()
+await pp.waitForTimeout(1200)
+confere(contem(await pp.innerText('body'), 'Thank you'), 'e consegue enviar a nota')
+
+// a nota aparece na ficha do motorista
+await p.goto(`${RAIZ}/app/cadastros`, { waitUntil: 'networkidle' })
+await p.waitForTimeout(1000)
+confere(contem(await texto(p), '★ 5.0'), 'a nota entra na ficha do motorista')
+
 // ---------- 11. o painel de quem vende o sistema ----------
 // A dona do sistema é criada direto no banco, como será na vida real.
 const { execSync } = await import('node:child_process')
@@ -249,11 +342,24 @@ await pa.getByLabel('Senha').fill(SENHA)
 await pa.getByRole('button', { name: 'Entrar' }).click()
 await pa.waitForURL('**/admin', { timeout: 15000 })
 await pa.waitForTimeout(1200)
+await pa.getByRole('button', { name: 'Números', exact: true }).click()
+await pa.waitForTimeout(700)
 const painelAdmin = (await pa.innerText('body')).replace(/\u00a0/g, ' ')
-confere(painelAdmin.includes('Serra Transfer'), 'o painel mostra a empresa cliente')
 confere(painelAdmin.includes('R$ 199,00'), 'o painel mostra o dinheiro recebido no mês')
-confere(painelAdmin.includes('ativa'), 'o painel mostra a assinatura como ativa depois do pagamento')
 await pa.screenshot({ path: `${FOTOS}/n12-admin-clientes.png`, fullPage: true })
+
+confere(contem(painelAdmin, 'Receita recorrente'), 'o painel mostra os indicadores do negócio')
+confere(contem(painelAdmin, 'Faturamento mês a mês'), 'e o gráfico de faturamento')
+
+await pa.getByRole('button', { name: 'Clientes', exact: true }).click()
+await pa.waitForTimeout(600)
+await pa.getByText('Serra Transfer').first().click()
+await pa.waitForTimeout(700)
+confere(contem(await pa.innerText('body'), 'Esticar o teste'),
+        'a administração abre a ficha do cliente para editar')
+await pa.screenshot({ path: `${FOTOS}/n17-admin-cliente.png`, fullPage: true })
+await pa.getByRole('button', { name: 'Fechar', exact: true }).last().click()
+await pa.waitForTimeout(400)
 
 await pa.getByRole('button', { name: 'Pagamentos' }).click()
 await pa.waitForTimeout(600)

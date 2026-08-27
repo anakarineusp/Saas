@@ -1,7 +1,8 @@
 // Único lugar do aplicativo que conversa com o banco de dados.
 import { supabase } from './supabase'
 import type {
-  Ajustes, Assinatura, Ciclo, Cliente, Indicador, Motorista, Perfil, Plano, Resumo, Servico, ServicoDoLink,
+  Acompanhamento, Ajustes, Assinatura, AvaliacaoDoLink, Ciclo, Cliente, Cupom, Indicador, Indicadores,
+  MesDeReceita, Motorista, Pendencia, Perfil, Plano, Reputacao, Resumo, Rota, Servico, ServicoDoLink,
 } from './tipos'
 
 function conferir<T>(resposta: { data: T | null; error: { message: string } | null }): T {
@@ -295,4 +296,122 @@ export async function pagamentos() {
   return conferir(
     await supabase.from('pagamentos').select('*').order('criado_em', { ascending: false }).limit(100),
   ) ?? []
+}
+
+// ---------------------------------------------------- avaliação e reputação
+
+export async function linkDeAvaliacao(servicoId: string): Promise<string> {
+  return conferir(await supabase.rpc('link_de_avaliacao', { p_servico_id: servicoId }))
+}
+
+export async function avaliacaoDoLink(token: string): Promise<AvaliacaoDoLink | null> {
+  const dados = conferir(await supabase.rpc('avaliacao_do_link', { p_token: token })) as AvaliacaoDoLink[]
+  return dados?.[0] ?? null
+}
+
+export async function avaliar(dados: {
+  token: string
+  nota: number
+  pontualidade?: number
+  veiculo?: number
+  comentario?: string
+}) {
+  conferir(
+    await supabase.rpc('avaliar', {
+      p_token: dados.token,
+      p_nota: dados.nota,
+      p_pontualidade: dados.pontualidade ?? null,
+      p_veiculo: dados.veiculo ?? null,
+      p_comentario: dados.comentario ?? null,
+    }),
+  )
+}
+
+export async function reputacao(): Promise<Reputacao[]> {
+  return conferir(await supabase.from('reputacao').select('*').order('nome')) ?? []
+}
+
+// --------------------------------------------- acompanhamento do passageiro
+
+export async function linkDeAcompanhamento(servicoId: string): Promise<string> {
+  return conferir(await supabase.rpc('link_de_acompanhamento', { p_servico_id: servicoId }))
+}
+
+export async function acompanhar(token: string): Promise<Acompanhamento | null> {
+  const dados = conferir(await supabase.rpc('acompanhar', { p_token: token })) as Acompanhamento[]
+  return dados?.[0] ?? null
+}
+
+// --------------------------------------------------- tabela de preços
+
+export async function rotas(): Promise<Rota[]> {
+  return conferir(await supabase.from('rotas').select('*').eq('ativa', true).order('nome')) ?? []
+}
+
+export async function salvarRota(r: Partial<Rota> & { empresa_id: string }) {
+  const { id, ...resto } = r
+  if (id) return conferir(await supabase.from('rotas').update(resto).eq('id', id).select())
+  return conferir(await supabase.from('rotas').insert(resto).select())
+}
+
+export async function excluirRota(id: string) {
+  conferir(await supabase.from('rotas').delete().eq('id', id).select())
+}
+
+// ------------------------------------------------------------------ cupons
+
+export async function conferirCupom(codigo: string): Promise<Cupom | null> {
+  const dados = conferir(await supabase.rpc('conferir_cupom', { p_codigo: codigo })) as Cupom[]
+  return dados?.[0] ?? null
+}
+
+export async function aplicarCupom(codigo: string): Promise<string> {
+  return conferir(await supabase.rpc('aplicar_cupom', { p_codigo: codigo }))
+}
+
+export async function cupons(): Promise<Cupom[]> {
+  return conferir(await supabase.from('cupons').select('*').order('criado_em', { ascending: false })) ?? []
+}
+
+export async function salvarCupom(c: Partial<Cupom> & { codigo: string }, novo = false) {
+  if (novo) return conferir(await supabase.from('cupons').insert(c).select())
+  const { codigo, ...resto } = c
+  return conferir(await supabase.from('cupons').update(resto).eq('codigo', codigo).select())
+}
+
+export async function excluirCupom(codigo: string) {
+  conferir(await supabase.from('cupons').delete().eq('codigo', codigo).select())
+}
+
+// ------------------------------------------------------ lembrete da véspera
+
+export async function pendenciasDeAmanha(): Promise<Pendencia[]> {
+  return (conferir(await supabase.rpc('pendencias_de_amanha')) as Pendencia[]) ?? []
+}
+
+// ------------------------------------- números e gestão para a administração
+
+export async function painelIndicadores(): Promise<Indicadores | null> {
+  const { data } = await supabase.from('painel_indicadores').select('*').limit(1)
+  return (data?.[0] as Indicadores) ?? null
+}
+
+export async function receitaPorMes(meses = 12): Promise<MesDeReceita[]> {
+  return (conferir(await supabase.rpc('receita_por_mes', { p_meses: meses })) as MesDeReceita[]) ?? []
+}
+
+export async function salvarEmpresa(id: string, dados: Record<string, unknown>) {
+  conferir(await supabase.from('empresas').update(dados).eq('id', id).select())
+}
+
+export async function excluirEmpresa(id: string) {
+  conferir(await supabase.from('empresas').delete().eq('id', id).select())
+}
+
+export async function mudarAssinatura(empresaId: string, dados: Record<string, unknown>) {
+  conferir(await supabase.from('assinaturas').update(dados).eq('empresa_id', empresaId).select())
+}
+
+export async function esticarTeste(empresaId: string, dias: number) {
+  conferir(await supabase.rpc('esticar_teste', { p_empresa: empresaId, p_dias: dias }))
 }

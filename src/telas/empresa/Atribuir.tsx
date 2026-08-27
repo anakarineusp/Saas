@@ -5,11 +5,15 @@ import { useAvisar } from '../../componentes/Avisos'
 import { EtiquetaDeStatus } from '../../componentes/Etiqueta'
 import { Icone } from '../../componentes/Icone'
 import {
-  atribuirMotorista, cancelarServico, concluirServico, linkDoServico, reabrirServico,
+  atribuirMotorista, cancelarServico, concluirServico, linkDeAcompanhamento, linkDeAvaliacao,
+  linkDoServico, reabrirServico,
 } from '../../dados'
 import { disponibilidadeDe } from '../../lib/disponibilidade'
 import { dataCurta, hora, moeda, rotuloTipo } from '../../lib/formato'
-import { abrirWhatsApp, linkDeConfirmacao, mensagemParaIndicador, mensagemParaMotorista } from '../../lib/whatsapp'
+import {
+  abrirWhatsApp, linkDeAcompanhamento as enderecoDeAcompanhamento, linkDeAvaliacao as enderecoDeAvaliacao,
+  linkDeConfirmacao, mensagemDeAcompanhamento, mensagemDeAvaliacao, mensagemParaIndicador, mensagemParaMotorista,
+} from '../../lib/whatsapp'
 import type { Indicador, Motorista, Servico } from '../../tipos'
 
 // Um ponto colorido basta: o texto continua legível e a tela não vira semáforo.
@@ -86,6 +90,40 @@ export function Atribuir({
     }
   }
 
+  /** Link que o hotel manda para o hóspede: mostra o motorista e o horário. */
+  async function mandarAcompanhamento() {
+    setErro('')
+    try {
+      const token = await linkDeAcompanhamento(servico.id)
+      const destino = indicador?.telefone
+      if (destino) {
+        abrirWhatsApp(destino, mensagemDeAcompanhamento(servico, token))
+      } else {
+        await navigator.clipboard.writeText(enderecoDeAcompanhamento(token))
+        avisar('Link de acompanhamento copiado')
+      }
+    } catch (e) {
+      setErro((e as Error).message)
+    }
+  }
+
+  /** Pedido de avaliação, depois da viagem. */
+  async function pedirAvaliacao() {
+    setErro('')
+    try {
+      const token = await linkDeAvaliacao(servico.id)
+      await navigator.clipboard.writeText(enderecoDeAvaliacao(token))
+      avisar('Link de avaliação copiado')
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(mensagemDeAvaliacao(servico, token))}`,
+        '_blank',
+        'noopener',
+      )
+    } catch (e) {
+      setErro((e as Error).message)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="painel rounded-2xl p-4">
@@ -151,6 +189,7 @@ export function Atribuir({
             Avisar {indicador ? indicador.nome : 'indicador'}
           </Botao>
 
+
           {(servico.status === 'confirmado' || servico.status === 'atribuido') && (
             <Botao
               tom="fantasma"
@@ -163,6 +202,20 @@ export function Atribuir({
             </Botao>
           )}
         </div>
+      )}
+
+      {servico.status !== 'cancelado' && (
+        <Botao tom="contorno" largo onClick={() => void mandarAcompanhamento()}>
+          <Icone nome="seta" className="h-4 w-4" />
+          Link de acompanhamento do passageiro
+        </Botao>
+      )}
+
+      {servico.status === 'concluido' && (
+        <Botao tom="ok" largo onClick={() => void pedirAvaliacao()}>
+          <Icone nome="whatsapp" className="h-4 w-4" />
+          Pedir avaliação ao passageiro
+        </Botao>
       )}
 
       {encerrado && (

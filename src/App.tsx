@@ -10,6 +10,8 @@ import { Assinatura } from './telas/empresa/Assinatura'
 import { Cadastros } from './telas/empresa/Cadastros'
 import { Hoje } from './telas/empresa/Hoje'
 import { MeusServicos } from './telas/motorista/MeusServicos'
+import { Acompanhar } from './telas/publico/Acompanhar'
+import { Avaliar } from './telas/publico/Avaliar'
 import { Confirmar } from './telas/publico/Confirmar'
 import { Diagnostico } from './telas/publico/Diagnostico'
 import { Convite } from './telas/publico/Convite'
@@ -74,6 +76,8 @@ export default function App() {
           <Route path="/sua-empresa" element={<SuaEmpresa />} />
           <Route path="/convite/:token" element={<Convite />} />
           <Route path="/confirmar/:token" element={<Confirmar />} />
+          <Route path="/avaliar/:token" element={<Avaliar />} />
+          <Route path="/acompanhar/:token" element={<Acompanhar />} />
 
           <Route
             path="/app"

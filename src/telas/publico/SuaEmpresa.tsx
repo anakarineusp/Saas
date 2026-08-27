@@ -5,7 +5,9 @@ import { Botao } from '../../componentes/Botao'
 import { Campo, Entrada } from '../../componentes/Campos'
 import { MolduraPublica } from '../../componentes/MolduraPublica'
 import { Icone } from '../../componentes/Icone'
-import { ajustes as buscarAjustes, criarEmpresa, iniciarTesteComCartao, planos as buscarPlanos } from '../../dados'
+import {
+  ajustes as buscarAjustes, aplicarCupom, criarEmpresa, iniciarTesteComCartao, planos as buscarPlanos,
+} from '../../dados'
 import { moeda } from '../../lib/formato'
 import type { Plano } from '../../tipos'
 import { useSessao } from '../../sessao'
@@ -19,6 +21,7 @@ export function SuaEmpresa() {
   const [cidade, setCidade] = useState('')
   const [documento, setDocumento] = useState('')
   const [indicacao, setIndicacao] = useState('')
+  const [cupom, setCupom] = useState('')
   const [erro, setErro] = useState('')
   const [indo, setIndo] = useState(false)
 
@@ -48,6 +51,14 @@ export function SuaEmpresa() {
     setIndo(true)
     try {
       await criarEmpresa({ empresa, seuNome, telefone, cidade, documento, indicacao })
+      // O cupom é opcional: se ele não valer, o cadastro não pode ser perdido por isso.
+      if (cupom.trim()) {
+        try {
+          await aplicarCupom(cupom.trim())
+        } catch (e) {
+          setErro(`A empresa foi criada, mas o cupom não valeu: ${(e as Error).message}`)
+        }
+      }
       await recarregar()
       if (pedeCartao) {
         setTitular((t) => ({ ...t, nome: t.nome || seuNome, documento: t.documento || documento }))
@@ -215,14 +226,24 @@ export function SuaEmpresa() {
         <Campo rotulo="CNPJ ou CPF" dica="Usado só na nota da assinatura.">
           <Entrada inputMode="numeric" value={documento} onChange={(e) => setDocumento(e.target.value)} />
         </Campo>
-        <Campo rotulo="Código de indicação" dica="Se alguém te indicou, vocês dois ganham um mês grátis.">
-          <Entrada
-            value={indicacao}
-            onChange={(e) => setIndicacao(e.target.value.toUpperCase())}
-            placeholder="opcional"
-            maxLength={8}
-          />
-        </Campo>
+        <div className="grid grid-cols-2 gap-3">
+          <Campo rotulo="Código de indicação" dica="Vocês dois ganham um mês.">
+            <Entrada
+              value={indicacao}
+              onChange={(e) => setIndicacao(e.target.value.toUpperCase())}
+              placeholder="opcional"
+              maxLength={8}
+            />
+          </Campo>
+          <Campo rotulo="Cupom" dica="Se você recebeu um.">
+            <Entrada
+              value={cupom}
+              onChange={(e) => setCupom(e.target.value.toUpperCase())}
+              placeholder="opcional"
+              maxLength={20}
+            />
+          </Campo>
+        </div>
         <Erro>{erro}</Erro>
         <Botao type="submit" largo tamanho="grande" disabled={indo || !empresa.trim() || !seuNome.trim()}>
           {indo ? 'Criando…' : pedeCartao ? 'Continuar' : 'Começar os 7 dias'}

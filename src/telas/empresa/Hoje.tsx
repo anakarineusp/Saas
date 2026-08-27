@@ -8,13 +8,14 @@ import { Icone } from '../../componentes/Icone'
 import {
   indicadores as buscarIndicadores,
   motoristas as buscarMotoristas,
+  pendenciasDeAmanha,
   servicos as buscarServicos,
   linkDoServico,
 } from '../../dados'
 import { dataCurta, dataPorExtenso, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
 import { abrirWhatsApp, mensagemParaMotorista } from '../../lib/whatsapp'
 import { useAvisar } from '../../componentes/Avisos'
-import type { Indicador, Motorista, Servico } from '../../tipos'
+import type { Indicador, Motorista, Pendencia, Servico } from '../../tipos'
 import { Atribuir } from './Atribuir'
 
 function Cartao({ servico, aoTocar }: { servico: Servico; aoTocar: () => void }) {
@@ -80,16 +81,23 @@ export function Hoje() {
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
   const [indicadores, setIndicadores] = useState<Indicador[]>([])
   const [aberto, setAberto] = useState<string | null>(null)
+  const [amanha, setAmanha] = useState<Pendencia[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
   const carregar = useCallback(async () => {
     setErro('')
     try {
-      const [s, m, i] = await Promise.all([buscarServicos(dia, dia), buscarMotoristas(), buscarIndicadores()])
+      const [s, m, i, p] = await Promise.all([
+        buscarServicos(dia, dia),
+        buscarMotoristas(),
+        buscarIndicadores(),
+        pendenciasDeAmanha().catch(() => []),
+      ])
       setServicos(s)
       setMotoristas(m)
       setIndicadores(i)
+      setAmanha(p)
     } catch (e) {
       setErro((e as Error).message)
     } finally {
@@ -213,6 +221,46 @@ export function Hoje() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* O lembrete da véspera: o que amanhã ainda pode furar. */}
+      {amanha.length > 0 && dia === hojeISO() && (
+        <div className="painel mt-4 rounded-2xl p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-bold tracking-[0.15em] text-tenue uppercase">Amanhã</p>
+            <span className="text-xs font-semibold text-atencao">
+              {amanha.length} {amanha.length === 1 ? 'pendência' : 'pendências'}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-fraca">
+            Estes serviços de amanhã ainda não estão fechados. Resolver hoje evita telefonema de madrugada.
+          </p>
+          <ul className="mt-3 space-y-1.5">
+            {amanha.slice(0, 4).map((p) => (
+              <li key={p.servico_id} className="flex items-center gap-2 text-sm">
+                <span className="font-display font-semibold text-tinta tabular-nums">{hora(p.hora)}</span>
+                <span className="min-w-0 flex-1 truncate text-fraca">{p.passageiro}</span>
+                <span className="shrink-0 text-xs text-tenue">
+                  {p.status === 'sem_motorista' ? 'sem motorista' : p.status === 'recusado' ? 'recusado' : 'sem resposta'}
+                </span>
+              </li>
+            ))}
+            {amanha.length > 4 && (
+              <li className="text-xs text-tenue">e mais {amanha.length - 4}…</li>
+            )}
+          </ul>
+          <button
+            type="button"
+            onClick={() => {
+              const d = new Date()
+              d.setDate(d.getDate() + 1)
+              setDia(paraISO(d))
+            }}
+            className="mt-3 text-xs font-semibold text-destaque underline underline-offset-2"
+          >
+            abrir a agenda de amanhã
+          </button>
         </div>
       )}
 
