@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Erro } from '../../componentes/Aviso'
-import { BotaoPrincipal, Campo, Entrada } from '../../componentes/Campos'
+import { Botao } from '../../componentes/Botao'
+import { Campo, Entrada } from '../../componentes/Campos'
+import { MolduraPublica } from '../../componentes/MolduraPublica'
 import { aceitarConvite, criarConta, entrar } from '../../dados'
 import { useSessao } from '../../sessao'
 import { supabase } from '../../supabase'
@@ -37,15 +39,12 @@ export function Convite() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Sua conta de motorista</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Assim você vê todos os seus serviços num lugar só. Continua valendo confirmar pelo link do WhatsApp,
-        sem conta nenhuma.
-      </p>
-
+    <MolduraPublica
+      titulo="Sua conta de motorista"
+      subtitulo="Assim você vê todos os seus serviços num lugar só. Continua valendo confirmar pelo link do WhatsApp, sem conta nenhuma."
+    >
       <form
-        className="mt-6 space-y-3"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
           void enviar()
@@ -59,7 +58,7 @@ export function Convite() {
             <Campo rotulo="E-mail">
               <Entrada type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </Campo>
-            <Campo rotulo="Senha (mínimo 6 letras ou números)">
+            <Campo rotulo="Senha" dica="Pelo menos 6 letras ou números.">
               <Entrada
                 type="password"
                 autoComplete="new-password"
@@ -70,10 +69,10 @@ export function Convite() {
           </>
         )}
         <Erro>{erro}</Erro>
-        <BotaoPrincipal type="submit" disabled={indo || !nome.trim() || (!entrou && senha.length < 6)}>
+        <Botao type="submit" largo tamanho="grande" disabled={indo || !nome.trim() || (!entrou && senha.length < 6)}>
           {indo ? 'Criando…' : 'Criar minha conta'}
-        </BotaoPrincipal>
+        </Botao>
       </form>
-    </div>
+    </MolduraPublica>
   )
 }

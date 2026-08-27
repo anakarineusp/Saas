@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Erro } from '../../componentes/Aviso'
-import { BotaoPrincipal, Campo, Entrada } from '../../componentes/Campos'
+import { Botao } from '../../componentes/Botao'
+import { Campo, Entrada } from '../../componentes/Campos'
+import { MolduraPublica } from '../../componentes/MolduraPublica'
 import { entrar } from '../../dados'
 
 export function Entrar() {
@@ -25,12 +27,20 @@ export function Entrar() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Entrar</h1>
-      <p className="mt-1 text-sm text-slate-500">Use o e-mail e a senha da sua conta.</p>
-
+    <MolduraPublica
+      titulo="Entrar"
+      subtitulo="Use o e-mail e a senha da sua conta."
+      rodape={
+        <>
+          Ainda não tem conta?{' '}
+          <Link to="/criar-conta" className="font-semibold text-destaque hover:underline">
+            Comece o teste de 7 dias
+          </Link>
+        </>
+      }
+    >
       <form
-        className="mt-6 space-y-3"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
           void enviar()
@@ -48,17 +58,10 @@ export function Entrar() {
           />
         </Campo>
         <Erro>{erro}</Erro>
-        <BotaoPrincipal type="submit" disabled={indo || !email || !senha}>
+        <Botao type="submit" largo tamanho="grande" disabled={indo || !email || !senha}>
           {indo ? 'Entrando…' : 'Entrar'}
-        </BotaoPrincipal>
+        </Botao>
       </form>
-
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Ainda não tem conta?{' '}
-        <Link to="/criar-conta" className="font-semibold text-slate-900 underline">
-          Comece o teste de 7 dias
-        </Link>
-      </p>
-    </div>
+    </MolduraPublica>
   )
 }

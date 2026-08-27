@@ -1,19 +1,97 @@
 @import 'tailwindcss';
 
+/* ---------------------------------------------------------------------------
+   O sistema visual.
+
+   Fundo azul-noite em vez de preto puro: preto absoluto cansa a vista e dá
+   aspecto barato em tela de celular. O destaque é um azul-gelo de farol —
+   a ideia é estrada na serra à noite.
+
+   As cores de recado (verde, âmbar, vermelho) ficam separadas do destaque,
+   para "confirmado" nunca se confundir com "clicável".
+--------------------------------------------------------------------------- */
+
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-fundo: var(--c-fundo);
+  --color-fundo2: var(--c-fundo2);
+  --color-superficie: var(--c-superficie);
+  --color-superficie2: var(--c-superficie2);
+  --color-borda: var(--c-borda);
+  --color-bordaforte: var(--c-bordaforte);
+  --color-tinta: var(--c-tinta);
+  --color-fraca: var(--c-fraca);
+  --color-tenue: var(--c-tenue);
+  --color-destaque: var(--c-destaque);
+  --color-destaque2: var(--c-destaque2);
+  --color-ok: var(--c-ok);
+  --color-atencao: var(--c-atencao);
+  --color-alerta: var(--c-alerta);
+}
+
+/* escuro — o padrão */
+:root {
+  --c-fundo: #070b14;
+  --c-fundo2: #0b1220;
+  --c-superficie: #101a2c;
+  --c-superficie2: #16233a;
+  --c-borda: #1e2d47;
+  --c-bordaforte: #2c405f;
+  --c-tinta: #eaf1ff;
+  --c-fraca: #9fb0cc;
+  --c-tenue: #6b7d9a;
+  --c-destaque: #4cc4ff;
+  --c-destaque2: #1b8fd6;
+  --c-ok: #34d399;
+  --c-atencao: #fbbf24;
+  --c-alerta: #fb6a72;
+
+  --brilho: 0 0 0 1px rgb(255 255 255 / 0.04), 0 18px 40px -24px rgb(0 0 0 / 0.9);
+  color-scheme: dark;
+}
+
+/* claro — para quem trabalha no sol */
+[data-tema='claro'] {
+  --c-fundo: #f4f7fc;
+  --c-fundo2: #ffffff;
+  --c-superficie: #ffffff;
+  --c-superficie2: #f1f5fb;
+  --c-borda: #dde5f2;
+  --c-bordaforte: #c3d0e4;
+  --c-tinta: #0b1628;
+  --c-fraca: #4a5a75;
+  --c-tenue: #7488a5;
+  --c-destaque: #0f7fc4;
+  --c-destaque2: #0a5f95;
+  --c-ok: #0e9f6e;
+  --c-atencao: #b45309;
+  --c-alerta: #d33843;
+
+  --brilho: 0 1px 2px rgb(16 30 54 / 0.06), 0 12px 28px -20px rgb(16 30 54 / 0.35);
+  color-scheme: light;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-slate-100 font-sans text-slate-900 antialiased;
+  @apply bg-fundo font-sans text-tinta antialiased;
 }
 
-button {
+button,
+a {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* O foco pelo teclado precisa aparecer — gente que não usa mouse depende disso. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--c-destaque);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 input,
@@ -21,6 +99,13 @@ select,
 textarea {
   font-size: 16px; /* evita o zoom automático do iPhone ao focar um campo */
 }
+
+::selection {
+  background: var(--c-destaque);
+  color: #04121f;
+}
+
+/* --------------------------------------------------------------- movimento */
 
 @keyframes folha-subir {
   from {
@@ -40,10 +125,135 @@ textarea {
   }
 }
 
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulsar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes brilhar {
+  from {
+    background-position: -160% 0;
+  }
+  to {
+    background-position: 260% 0;
+  }
+}
+
 .folha-sobe {
-  animation: folha-subir 0.22s ease-out;
+  animation: folha-subir 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .surge {
-  animation: surgir 0.18s ease-out;
+  animation: surgir 0.2s ease-out;
+}
+
+/* Entrada em cascata: cada elemento aparece um pouquinho depois do anterior. */
+.entra {
+  opacity: 0;
+  animation: entrar 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.atraso-1 { animation-delay: 0.06s; }
+.atraso-2 { animation-delay: 0.12s; }
+.atraso-3 { animation-delay: 0.18s; }
+.atraso-4 { animation-delay: 0.24s; }
+.atraso-5 { animation-delay: 0.3s; }
+.atraso-6 { animation-delay: 0.36s; }
+
+.pulsa {
+  animation: pulsar 1.6s ease-in-out infinite;
+}
+
+/* Aparece quando entra na tela, ao rolar a página. */
+.revela {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.revela.visivel {
+  opacity: 1;
+  transform: none;
+}
+
+/* Espaço reservado enquanto os dados chegam. */
+.carregando-bloco {
+  background: linear-gradient(
+    90deg,
+    var(--c-superficie) 25%,
+    var(--c-superficie2) 50%,
+    var(--c-superficie) 75%
+  );
+  background-size: 220% 100%;
+  animation: brilhar 1.4s linear infinite;
+}
+
+/* Quem pediu menos movimento no aparelho recebe menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .entra,
+  .revela {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- pinceladas */
+
+/* Vidro fosco dos painéis. */
+.painel {
+  background: color-mix(in oklab, var(--c-superficie) 88%, transparent);
+  border: 1px solid var(--c-borda);
+  box-shadow: var(--brilho);
+  backdrop-filter: blur(10px);
+}
+
+/* Luz suave atrás do conteúdo principal. */
+.aurora::before {
+  content: '';
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 70%;
+  background:
+    radial-gradient(60% 60% at 20% 20%, color-mix(in oklab, var(--c-destaque) 22%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 80% 10%, color-mix(in oklab, var(--c-ok) 14%, transparent), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.texto-destaque {
+  background: linear-gradient(100deg, var(--c-tinta) 20%, var(--c-destaque) 60%, var(--c-tinta) 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

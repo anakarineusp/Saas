@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Erro } from '../../componentes/Aviso'
-import { BotaoPrincipal, Campo, Entrada } from '../../componentes/Campos'
+import { Botao } from '../../componentes/Botao'
+import { Campo, Entrada } from '../../componentes/Campos'
+import { Icone } from '../../componentes/Icone'
+import { MolduraPublica } from '../../componentes/MolduraPublica'
 import { criarConta, entrar } from '../../dados'
 import { supabase } from '../../supabase'
 
@@ -18,7 +21,6 @@ export function CriarConta() {
     setIndo(true)
     try {
       await criarConta(email.trim(), senha)
-      // Se o projeto exigir confirmação por e-mail, ainda não há sessão aberta.
       const { data } = await supabase.auth.getSession()
       if (!data.session) {
         try {
@@ -38,25 +40,38 @@ export function CriarConta() {
 
   if (confirmeOEmail) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 text-center">
-        <h1 className="text-2xl font-bold text-slate-900">Confirme o e-mail</h1>
-        <p className="mt-2 text-slate-600">
-          Mandamos uma mensagem para <strong>{email}</strong>. Abra o link de lá e depois volte para entrar.
-        </p>
-        <Link to="/entrar" className="mt-6 font-semibold text-slate-900 underline">
-          Já confirmei, quero entrar
-        </Link>
-      </div>
+      <MolduraPublica
+        titulo="Confirme o e-mail"
+        subtitulo={`Mandamos uma mensagem para ${email}. Abra o link de lá e depois volte para entrar.`}
+        rodape={
+          <Link to="/entrar" className="font-semibold text-destaque hover:underline">
+            Já confirmei, quero entrar
+          </Link>
+        }
+      >
+        <div className="painel flex items-center gap-3 rounded-2xl p-4">
+          <Icone nome="check" className="h-5 w-5 shrink-0 text-ok" traco={2.6} />
+          <p className="text-sm text-fraca">Conta criada. Falta só confirmar o e-mail.</p>
+        </div>
+      </MolduraPublica>
     )
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Teste 7 dias grátis</h1>
-      <p className="mt-1 text-sm text-slate-500">Sem cartão. Só um e-mail e uma senha.</p>
-
+    <MolduraPublica
+      titulo="Teste 7 dias grátis"
+      subtitulo="Sem cartão. Só um e-mail e uma senha — a empresa você cadastra no passo seguinte."
+      rodape={
+        <>
+          Já tem conta?{' '}
+          <Link to="/entrar" className="font-semibold text-destaque hover:underline">
+            Entrar
+          </Link>
+        </>
+      }
+    >
       <form
-        className="mt-6 space-y-3"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
           void enviar()
@@ -65,7 +80,7 @@ export function CriarConta() {
         <Campo rotulo="E-mail">
           <Entrada type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Campo>
-        <Campo rotulo="Senha (mínimo 6 letras ou números)">
+        <Campo rotulo="Senha" dica="Pelo menos 6 letras ou números.">
           <Entrada
             type="password"
             autoComplete="new-password"
@@ -74,17 +89,10 @@ export function CriarConta() {
           />
         </Campo>
         <Erro>{erro}</Erro>
-        <BotaoPrincipal type="submit" disabled={indo || !email || senha.length < 6}>
+        <Botao type="submit" largo tamanho="grande" disabled={indo || !email || senha.length < 6}>
           {indo ? 'Criando…' : 'Criar minha conta'}
-        </BotaoPrincipal>
+        </Botao>
       </form>
-
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Já tem conta?{' '}
-        <Link to="/entrar" className="font-semibold text-slate-900 underline">
-          Entrar
-        </Link>
-      </p>
-    </div>
+    </MolduraPublica>
   )
 }

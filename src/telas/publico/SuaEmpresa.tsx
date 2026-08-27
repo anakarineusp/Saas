@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Carregando, Erro } from '../../componentes/Aviso'
-import { BotaoPrincipal, Campo, Entrada } from '../../componentes/Campos'
+import { Botao } from '../../componentes/Botao'
+import { Campo, Entrada } from '../../componentes/Campos'
+import { MolduraPublica } from '../../componentes/MolduraPublica'
 import { criarEmpresa } from '../../dados'
 import { useSessao } from '../../sessao'
 
@@ -31,7 +33,7 @@ export function SuaEmpresa() {
     }
   }
 
-  if (carregando) return <Carregando />
+  if (carregando) return <Carregando linhas={2} />
   if (!entrou) return <Navigate to="/entrar" replace />
 
   // Quem já tem cadastro não precisa desta tela.
@@ -41,12 +43,9 @@ export function SuaEmpresa() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Sua empresa</h1>
-      <p className="mt-1 text-sm text-slate-500">Falta só isso para começar o teste de 7 dias.</p>
-
+    <MolduraPublica titulo="Sua empresa" subtitulo="Falta só isso para começar os 7 dias.">
       <form
-        className="mt-6 space-y-3"
+        className="space-y-4"
         onSubmit={(e) => {
           e.preventDefault()
           void enviar()
@@ -58,25 +57,27 @@ export function SuaEmpresa() {
         <Campo rotulo="Seu nome">
           <Entrada value={seuNome} onChange={(e) => setSeuNome(e.target.value)} />
         </Campo>
-        <Campo rotulo="WhatsApp">
-          <Entrada
-            inputMode="numeric"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            placeholder="5554999000000"
-          />
-        </Campo>
-        <Campo rotulo="Cidade">
-          <Entrada value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Gramado" />
-        </Campo>
-        <Campo rotulo="CNPJ ou CPF (para a nota da assinatura)">
+        <div className="grid grid-cols-2 gap-4">
+          <Campo rotulo="WhatsApp">
+            <Entrada
+              inputMode="numeric"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              placeholder="5554999000000"
+            />
+          </Campo>
+          <Campo rotulo="Cidade">
+            <Entrada value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Gramado" />
+          </Campo>
+        </div>
+        <Campo rotulo="CNPJ ou CPF" dica="Usado só na nota da assinatura.">
           <Entrada inputMode="numeric" value={documento} onChange={(e) => setDocumento(e.target.value)} />
         </Campo>
         <Erro>{erro}</Erro>
-        <BotaoPrincipal type="submit" disabled={indo || !empresa.trim() || !seuNome.trim()}>
+        <Botao type="submit" largo tamanho="grande" disabled={indo || !empresa.trim() || !seuNome.trim()}>
           {indo ? 'Criando…' : 'Começar os 7 dias'}
-        </BotaoPrincipal>
+        </Botao>
       </form>
-    </div>
+    </MolduraPublica>
   )
 }
