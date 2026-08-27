@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Carregando } from './componentes/Aviso'
+import { ProvedorDeAvisos } from './componentes/Avisos'
 import { ProvedorDeSessao, useSessao } from './sessao'
 import { faltaConfigurar } from './supabase'
 import { Painel } from './telas/admin/Painel'
@@ -63,8 +64,9 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <ProvedorDeSessao>
-        <Routes>
+      <ProvedorDeAvisos>
+        <ProvedorDeSessao>
+          <Routes>
           <Route path="/" element={<Vitrine />} />
           <Route path="/diagnostico" element={<Diagnostico />} />
           <Route path="/entrar" element={<Entrar />} />
@@ -105,9 +107,10 @@ export default function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </ProvedorDeSessao>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ProvedorDeSessao>
+      </ProvedorDeAvisos>
     </BrowserRouter>
   )
 }

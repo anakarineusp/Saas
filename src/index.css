@@ -180,18 +180,19 @@ textarea {
   animation: pulsar 1.6s ease-in-out infinite;
 }
 
-/* Aparece quando entra na tela, ao rolar a página. */
+/* Aparece quando entra na tela, ao rolar a página.
+   Repare que o estado escondido é colocado pelo próprio JavaScript: assim, se
+   ele falhar ou o navegador for antigo, o conteúdo aparece do mesmo jeito.
+   Efeito bonito nunca pode esconder informação. */
 .revela {
-  opacity: 0;
-  transform: translateY(22px);
   transition:
     opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.revela.visivel {
-  opacity: 1;
-  transform: none;
+.revela.escondida {
+  opacity: 0;
+  transform: translateY(22px);
 }
 
 /* Espaço reservado enquanto os dados chegam. */
@@ -221,7 +222,8 @@ textarea {
   }
 
   .entra,
-  .revela {
+  .revela,
+  .revela.escondida {
     opacity: 1;
     transform: none;
   }

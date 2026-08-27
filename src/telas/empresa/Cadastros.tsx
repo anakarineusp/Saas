@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Carregando, Erro } from '../../componentes/Aviso'
-import { BotaoPrincipal, Campo, Entrada, Selecao } from '../../componentes/Campos'
+import { Carregando, Erro, Vazio } from '../../componentes/Aviso'
+import { Botao } from '../../componentes/Botao'
+import { useAvisar } from '../../componentes/Avisos'
+import { Busca, Campo, Entrada, Selecao } from '../../componentes/Campos'
+import { Icone } from '../../componentes/Icone'
 import { Folha } from '../../componentes/Folha'
 import {
   criarConvite, excluirIndicador, excluirMotorista, excluirServico, gravarServico,
@@ -27,7 +30,7 @@ const TITULOS: Record<Secao, string> = {
 }
 
 function Linha({
-  titulo, detalhe, direita, aoEditar, aoExcluir, extra,
+  titulo, detalhe, direita, aoEditar, aoExcluir, extra, acoes,
 }: {
   titulo: string
   detalhe: string
@@ -35,24 +38,26 @@ function Linha({
   aoEditar: () => void
   aoExcluir: () => void
   extra?: React.ReactNode
+  acoes?: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white">
-      <div className="flex items-center gap-2 p-3.5">
+    <div className="painel rounded-2xl">
+      <div className="flex items-center gap-2 p-4">
         <button type="button" onClick={aoEditar} className="min-w-0 flex-1 text-left">
-          <span className="block truncate font-medium text-slate-900">{titulo}</span>
-          <span className="block truncate text-xs text-slate-500">{detalhe}</span>
+          <span className="block truncate font-semibold text-tinta">{titulo}</span>
+          <span className="block truncate text-xs text-tenue">{detalhe}</span>
         </button>
-        {direita && <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-900">{direita}</span>}
+        {direita && (
+          <span className="shrink-0 font-display text-sm font-bold text-tinta tabular-nums">{direita}</span>
+        )}
+        {acoes}
         <button
           type="button"
           onClick={aoExcluir}
           aria-label="Excluir"
-          className="shrink-0 rounded-full p-2 text-slate-400 active:bg-slate-100"
+          className="shrink-0 rounded-full p-2 text-tenue transition-colors hover:bg-alerta/10 hover:text-alerta"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" className="h-5 w-5">
-            <path d="M4 7h16M9 7V5h6v2m-8 0 1 13h8l1-13" />
-          </svg>
+          <Icone nome="lixeira" className="h-4.5 w-4.5" />
         </button>
       </div>
       {extra}
@@ -90,9 +95,9 @@ function FormMotorista({ inicial, aoSalvar }: { inicial: Motorista | null; aoSal
             onChange={(e) => setM({ ...m, percentual: Number(e.target.value) })} />
         </Campo>
       </div>
-      <BotaoPrincipal disabled={!m.nome?.trim() || !m.telefone?.trim()} onClick={() => aoSalvar(m)}>
+      <Botao largo tamanho="grande" disabled={!m.nome?.trim() || !m.telefone?.trim()} onClick={() => aoSalvar(m)}>
         Salvar motorista
-      </BotaoPrincipal>
+      </Botao>
     </div>
   )
 }
@@ -112,9 +117,9 @@ function FormIndicador({ inicial, aoSalvar }: { inicial: Indicador | null; aoSal
         <Entrada type="number" inputMode="numeric" value={i.comissao ?? 10}
           onChange={(e) => setI({ ...i, comissao: Number(e.target.value) })} />
       </Campo>
-      <BotaoPrincipal disabled={!i.nome?.trim()} onClick={() => aoSalvar(i)}>
+      <Botao largo tamanho="grande" disabled={!i.nome?.trim()} onClick={() => aoSalvar(i)}>
         Salvar indicador
-      </BotaoPrincipal>
+      </Botao>
     </div>
   )
 }
@@ -186,7 +191,9 @@ function FormServico({
         </Selecao>
       </Campo>
       <p className="text-xs text-slate-500">O motorista é escolhido na tela Hoje, tocando no serviço.</p>
-      <BotaoPrincipal
+      <Botao
+        largo
+        tamanho="grande"
         disabled={!s.passageiro.trim() || !s.destino.trim()}
         onClick={() =>
           aoSalvar({
@@ -205,13 +212,14 @@ function FormServico({
         }
       >
         Salvar serviço
-      </BotaoPrincipal>
+      </Botao>
     </div>
   )
 }
 
 export function Cadastros() {
   const { perfil } = useSessao()
+  const avisar = useAvisar()
   const empresaId = perfil?.empresa_id ?? ''
   const [secao, setSecao] = useState<Secao>('motoristas')
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
@@ -219,6 +227,7 @@ export function Cadastros() {
   const [servicos, setServicos] = useState<Servico[]>([])
   const [editando, setEditando] = useState<{ tipo: Secao; item?: unknown } | null>(null)
   const [convites, setConvites] = useState<Record<string, string>>({})
+  const [procura, setProcura] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -226,7 +235,7 @@ export function Cadastros() {
     setErro('')
     try {
       const hoje = hojeISO()
-      const de = `${hoje.slice(0, 4)}-01-01`
+      const de = `${Number(hoje.slice(0, 4)) - 1}-01-01`
       const ate = `${Number(hoje.slice(0, 4)) + 1}-12-31`
       const [m, i, s] = await Promise.all([buscarMotoristas(), buscarIndicadores(), buscarServicos(de, ate)])
       setMotoristas(m)
@@ -243,12 +252,13 @@ export function Cadastros() {
     void carregar()
   }, [carregar])
 
-  async function comErro(acao: () => Promise<unknown>) {
+  async function comErro(acao: () => Promise<unknown>, recado?: string) {
     setErro('')
     try {
       await acao()
       await carregar()
       setEditando(null)
+      if (recado) avisar(recado)
     } catch (e) {
       setErro((e as Error).message)
     }
@@ -264,20 +274,53 @@ export function Cadastros() {
     }
   }
 
+  /** O transfer de volta: mesma gente, rota invertida, no dia seguinte. */
+  function duplicarInvertido(s: Servico) {
+    const volta = new Date(`${s.data.slice(0, 10)}T12:00:00`)
+    volta.setDate(volta.getDate() + 1)
+    setEditando({
+      tipo: 'servicos',
+      item: {
+        ...s,
+        id: undefined,
+        data: volta.toISOString().slice(0, 10),
+        tipo: s.tipo === 'transfer_in' ? 'transfer_out' : s.tipo === 'transfer_out' ? 'transfer_in' : s.tipo,
+        origem: s.destino,
+        destino: s.origem,
+        voo: null,
+        status: 'sem_motorista',
+        motorista_id: null,
+      },
+    })
+  }
+
+  const filtrar = <T,>(lista: T[], texto: (item: T) => string) => {
+    const busca = procura.trim().toLowerCase()
+    if (!busca) return lista
+    return lista.filter((item) => texto(item).toLowerCase().includes(busca))
+  }
+
+  const motoristasFiltrados = filtrar(motoristas, (m) => `${m.nome} ${m.veiculo} ${m.telefone}`)
+  const indicadoresFiltrados = filtrar(indicadores, (i) => `${i.nome} ${i.telefone ?? ''}`)
+  const servicosFiltrados = filtrar(servicos, (s) => `${s.passageiro} ${s.origem} ${s.destino} ${s.voo ?? ''}`)
+
   if (carregando) return <Carregando />
 
   return (
     <div className="px-4 pt-5">
-      <h1 className="text-2xl font-bold text-slate-900">Cadastros</h1>
+      <h1 className="font-display text-2xl font-bold text-tinta">Cadastros</h1>
 
-      <div className="mt-4 flex gap-1 rounded-xl bg-slate-200 p-1">
+      <div className="mt-4 flex gap-1 rounded-xl border border-borda bg-superficie p-1">
         {SECOES.map((s) => (
           <button
             key={s.id}
             type="button"
-            onClick={() => setSecao(s.id)}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium ${
-              secao === s.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+            onClick={() => {
+              setSecao(s.id)
+              setProcura('')
+            }}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+              secao === s.id ? 'bg-destaque text-[#04121f]' : 'text-fraca hover:text-tinta'
             }`}
           >
             {s.rotulo}
@@ -289,17 +332,19 @@ export function Cadastros() {
         <Erro>{erro}</Erro>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setEditando({ tipo: secao })}
-        className="mt-4 w-full rounded-xl border-2 border-dashed border-slate-300 py-3 text-sm font-semibold text-slate-600 active:bg-slate-200"
-      >
-        + Adicionar {TITULOS[secao].toLowerCase()}
-      </button>
+      <div className="mt-4 flex gap-2">
+        <div className="flex-1">
+          <Busca valor={procura} aoMudar={setProcura} placeholder={`Procurar ${TITULOS[secao].toLowerCase()}`} />
+        </div>
+        <Botao onClick={() => setEditando({ tipo: secao })}>
+          <Icone nome="mais" className="h-4 w-4" />
+          Novo
+        </Botao>
+      </div>
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-4 space-y-2">
         {secao === 'motoristas' &&
-          motoristas.map((m) => (
+          motoristasFiltrados.map((m) => (
             <Linha
               key={m.id}
               titulo={m.nome}
@@ -307,20 +352,21 @@ export function Cadastros() {
               aoEditar={() => setEditando({ tipo: 'motoristas', item: m })}
               aoExcluir={() => {
                 if (window.confirm(`Excluir ${m.nome}? Os serviços dele ficam sem motorista.`))
-                  void comErro(() => excluirMotorista(m.id))
+                  void comErro(() => excluirMotorista(m.id), 'Motorista excluído')
               }}
               extra={
                 !m.perfil_id && (
-                  <div className="border-t border-slate-100 px-3.5 py-2">
+                  <div className="border-t border-borda px-4 py-2.5">
                     {convites[m.id] ? (
-                      <p className="text-xs break-all text-slate-500">
-                        Mande este link para {m.nome}: <span className="text-slate-900">{convites[m.id]}</span>
+                      <p className="text-xs break-all text-tenue">
+                        Mande este link para {m.nome}:{' '}
+                        <span className="text-destaque">{convites[m.id]}</span>
                       </p>
                     ) : (
                       <button
                         type="button"
                         onClick={() => void convidar(m)}
-                        className="text-xs font-semibold text-slate-600 underline"
+                        className="text-xs font-semibold text-fraca underline underline-offset-2 hover:text-tinta"
                       >
                         criar link de acesso para o motorista
                       </button>
@@ -332,20 +378,20 @@ export function Cadastros() {
           ))}
 
         {secao === 'indicadores' &&
-          indicadores.map((i) => (
+          indicadoresFiltrados.map((i) => (
             <Linha
               key={i.id}
               titulo={i.nome}
               detalhe={`Comissão de ${i.comissao}%`}
               aoEditar={() => setEditando({ tipo: 'indicadores', item: i })}
               aoExcluir={() => {
-                if (window.confirm(`Excluir ${i.nome}?`)) void comErro(() => excluirIndicador(i.id))
+                if (window.confirm(`Excluir ${i.nome}?`)) void comErro(() => excluirIndicador(i.id), 'Indicador excluído')
               }}
             />
           ))}
 
         {secao === 'servicos' &&
-          servicos.map((s) => (
+          servicosFiltrados.map((s) => (
             <Linha
               key={s.id}
               titulo={`${dataCurta(s.data)} ${hora(s.hora)} · ${s.passageiro}`}
@@ -353,10 +399,30 @@ export function Cadastros() {
               direita={moeda(s.valor_centavos)}
               aoEditar={() => setEditando({ tipo: 'servicos', item: s })}
               aoExcluir={() => {
-                if (window.confirm(`Excluir o serviço de ${s.passageiro}?`)) void comErro(() => excluirServico(s.id))
+                if (window.confirm(`Excluir o serviço de ${s.passageiro}?`))
+                  void comErro(() => excluirServico(s.id), 'Serviço excluído')
               }}
+              acoes={
+                <button
+                  type="button"
+                  onClick={() => duplicarInvertido(s)}
+                  aria-label="Criar o transfer de volta"
+                  title="Criar o transfer de volta"
+                  className="shrink-0 rounded-full p-2 text-tenue transition-colors hover:bg-destaque/10 hover:text-destaque"
+                >
+                  <Icone nome="volta" className="h-4.5 w-4.5" />
+                </button>
+              }
             />
           ))}
+
+        {((secao === 'motoristas' && motoristasFiltrados.length === 0) ||
+          (secao === 'indicadores' && indicadoresFiltrados.length === 0) ||
+          (secao === 'servicos' && servicosFiltrados.length === 0)) && (
+          <Vazio titulo={procura ? 'Nada encontrado' : `Nenhum ${TITULOS[secao].toLowerCase()} cadastrado`}>
+            {procura ? 'Tente escrever outra parte do nome.' : 'Use o botão Novo para cadastrar o primeiro.'}
+          </Vazio>
+        )}
       </div>
 
       <Folha
@@ -367,20 +433,20 @@ export function Cadastros() {
         {editando?.tipo === 'motoristas' && (
           <FormMotorista
             inicial={(editando.item as Motorista) ?? null}
-            aoSalvar={(m) => void comErro(() => salvarMotorista({ ...m, empresa_id: empresaId }))}
+            aoSalvar={(m) => void comErro(() => salvarMotorista({ ...m, empresa_id: empresaId }), 'Motorista salvo')}
           />
         )}
         {editando?.tipo === 'indicadores' && (
           <FormIndicador
             inicial={(editando.item as Indicador) ?? null}
-            aoSalvar={(i) => void comErro(() => salvarIndicador({ ...i, empresa_id: empresaId }))}
+            aoSalvar={(i) => void comErro(() => salvarIndicador({ ...i, empresa_id: empresaId }), 'Indicador salvo')}
           />
         )}
         {editando?.tipo === 'servicos' && (
           <FormServico
             inicial={(editando.item as Servico) ?? null}
             indicadores={indicadores}
-            aoSalvar={(s) => void comErro(() => gravarServico(s))}
+            aoSalvar={(s) => void comErro(() => gravarServico(s), 'Serviço salvo')}
           />
         )}
       </Folha>

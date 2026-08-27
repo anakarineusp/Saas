@@ -2,7 +2,13 @@
 
 export type Papel = 'dono' | 'motorista' | 'admin'
 export type TipoServico = 'transfer_in' | 'transfer_out' | 'passeio'
-export type StatusServico = 'sem_motorista' | 'atribuido' | 'confirmado' | 'concluido'
+export type StatusServico =
+  | 'sem_motorista'
+  | 'atribuido'
+  | 'confirmado'
+  | 'recusado'
+  | 'concluido'
+  | 'cancelado'
 export type StatusAssinatura = 'teste' | 'ativa' | 'atrasada' | 'cancelada'
 
 export type Perfil = {
@@ -47,6 +53,8 @@ export type Servico = {
   destino: string
   voo: string | null
   status: StatusServico
+  motivo: string | null
+  respondido_em: string | null
   motorista_id: string | null
   motorista: string | null
   veiculo: string | null
@@ -60,11 +68,14 @@ export type Servico = {
   comissao_indicador_centavos: number | null
 }
 
+export type Ciclo = 'mensal' | 'anual'
+
 export type Plano = {
   id: string
   nome: string
   descricao: string | null
   preco_centavos: number
+  preco_anual_centavos: number | null
   limite_motoristas: number | null
   limite_servicos_mes: number | null
   ordem: number
@@ -75,12 +86,17 @@ export type Assinatura = {
   empresa_id: string
   empresa: string
   status: StatusAssinatura
+  ciclo: Ciclo
   plano_id: string | null
   plano: string | null
   preco_centavos: number | null
   proxima_cobranca: string | null
   teste_termina_em: string
+  codigo_indicacao: string | null
+  meses_de_credito: number
   dias_de_teste: number
+  indicacoes_feitas: number
+  indicacoes_confirmadas: number
   pode_usar: boolean
 }
 
@@ -124,5 +140,13 @@ export type ServicoDoLink = {
   motorista: string
   empresa: string
   valor_motorista_centavos: number
+  status: StatusServico
   confirmado: boolean
+  recusado: boolean
+}
+
+export type Ajustes = {
+  exigir_cartao_no_teste: boolean
+  meses_de_premio_por_indicacao: number
+  meses_gratis_no_anual: number
 }

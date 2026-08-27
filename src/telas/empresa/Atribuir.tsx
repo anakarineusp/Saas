@@ -1,15 +1,21 @@
 import { useState } from 'react'
 import { Erro } from '../../componentes/Aviso'
-import { atribuirMotorista, linkDoServico } from '../../dados'
+import { Botao } from '../../componentes/Botao'
+import { useAvisar } from '../../componentes/Avisos'
+import { EtiquetaDeStatus } from '../../componentes/Etiqueta'
+import { Icone } from '../../componentes/Icone'
+import {
+  atribuirMotorista, cancelarServico, concluirServico, linkDoServico, reabrirServico,
+} from '../../dados'
 import { disponibilidadeDe } from '../../lib/disponibilidade'
 import { dataCurta, hora, moeda, rotuloTipo } from '../../lib/formato'
-import { abrirWhatsApp, mensagemParaIndicador, mensagemParaMotorista } from '../../lib/whatsapp'
+import { abrirWhatsApp, linkDeConfirmacao, mensagemParaIndicador, mensagemParaMotorista } from '../../lib/whatsapp'
 import type { Indicador, Motorista, Servico } from '../../tipos'
 
 const ETIQUETA = {
-  livre: 'bg-emerald-100 text-emerald-700',
-  ocupado: 'bg-amber-100 text-amber-700',
-  nao_cabe: 'bg-red-100 text-red-700',
+  livre: 'bg-ok/15 text-ok border-ok/30',
+  ocupado: 'bg-atencao/15 text-atencao border-atencao/30',
+  nao_cabe: 'bg-alerta/15 text-alerta border-alerta/30',
 }
 
 export function Atribuir({
@@ -18,34 +24,43 @@ export function Atribuir({
   motoristas,
   indicadores,
   aoMudar,
+  aoFechar,
 }: {
   servico: Servico
   servicos: Servico[]
   motoristas: Motorista[]
   indicadores: Indicador[]
   aoMudar: () => Promise<void>
+  aoFechar: () => void
 }) {
+  const avisar = useAvisar()
   const [erro, setErro] = useState('')
   const [indo, setIndo] = useState(false)
 
   const motorista = motoristas.find((m) => m.id === servico.motorista_id) ?? null
   const indicador = indicadores.find((i) => i.id === servico.indicador_id) ?? null
+  const encerrado = servico.status === 'cancelado' || servico.status === 'concluido'
 
-  async function escolher(alvo: Motorista) {
-    const disp = disponibilidadeDe(alvo, servico, servicos)
-    if (disp.estado === 'ocupado') {
-      if (!window.confirm(`${alvo.nome} já tem serviço às ${disp.hora}. Atribuir mesmo assim?`)) return
-    }
+  async function tentar(acao: () => Promise<unknown>, recado?: string) {
     setErro('')
     setIndo(true)
     try {
-      await atribuirMotorista(servico.id, alvo.id)
+      await acao()
       await aoMudar()
+      if (recado) avisar(recado)
     } catch (e) {
       setErro((e as Error).message)
     } finally {
       setIndo(false)
     }
+  }
+
+  async function escolher(alvo: Motorista) {
+    const disp = disponibilidadeDe(alvo, servico, servicos)
+    if (disp.estado === 'ocupado') {
+      if (!window.confirm(`${alvo.nome} já tem serviço às ${disp.hora}. Escalar mesmo assim?`)) return
+    }
+    await tentar(() => atribuirMotorista(servico.id, alvo.id), `${alvo.nome} escalado`)
   }
 
   async function avisarMotorista() {
@@ -59,105 +74,170 @@ export function Atribuir({
     }
   }
 
+  async function copiarLink() {
+    setErro('')
+    try {
+      const token = await linkDoServico(servico.id)
+      await navigator.clipboard.writeText(linkDeConfirmacao(token))
+      avisar('Link copiado')
+    } catch {
+      setErro('Não consegui copiar. Use o botão de avisar pelo WhatsApp.')
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold text-slate-900">
-            {dataCurta(servico.data)} às {hora(servico.hora)}
-          </span>
-          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">
-            {rotuloTipo(servico.tipo)}
-          </span>
+      <div className="painel rounded-2xl p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-display font-bold text-tinta">
+              {dataCurta(servico.data)} às {hora(servico.hora)}
+            </span>
+            <span className="rounded-md bg-superficie2 px-1.5 py-0.5 text-xs font-medium text-fraca">
+              {rotuloTipo(servico.tipo)}
+            </span>
+          </div>
+          <EtiquetaDeStatus status={servico.status} />
         </div>
-        <p className="mt-1.5 font-medium text-slate-900">
-          {servico.passageiro} <span className="font-normal text-slate-500">· {servico.pax} pax</span>
+        <p className="mt-2 font-semibold text-tinta">
+          {servico.passageiro} <span className="font-normal text-tenue">· {servico.pax} pax</span>
         </p>
-        {servico.voo && <p className="text-sm text-slate-500">Voo {servico.voo}</p>}
-        <p className="mt-1 text-sm text-slate-500">
-          {servico.origem} <span className="text-slate-400">→</span> {servico.destino}
+        {servico.voo && <p className="text-sm text-fraca">Voo {servico.voo}</p>}
+        <p className="mt-1 text-sm text-fraca">
+          {servico.origem} <span className="text-tenue">→</span> {servico.destino}
         </p>
-        <div className="mt-3 flex justify-between border-t border-slate-100 pt-3 text-sm">
-          <span className="text-slate-500">{indicador ? indicador.nome : 'Sem indicação'}</span>
-          <span className="font-semibold tabular-nums text-slate-900">{moeda(servico.valor_centavos)}</span>
+        <div className="mt-3 flex justify-between border-t border-borda pt-3 text-sm">
+          <span className="text-tenue">{indicador ? indicador.nome : 'Sem indicação'}</span>
+          <span className="font-display font-bold text-tinta tabular-nums">{moeda(servico.valor_centavos)}</span>
         </div>
+        {servico.motivo && (
+          <p className="mt-3 rounded-lg bg-alerta/10 px-3 py-2 text-xs text-alerta">Motivo: {servico.motivo}</p>
+        )}
       </div>
 
       <Erro>{erro}</Erro>
 
-      {motorista && (
-        <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-          <div className="flex items-baseline justify-between">
-            <span className="font-semibold text-emerald-900">
-              {motorista.nome} · {motorista.veiculo}
+      {motorista && !encerrado && (
+        <div className="space-y-3 rounded-2xl border border-ok/30 bg-ok/8 p-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-display font-bold text-tinta">
+              {motorista.nome} <span className="font-normal text-fraca">· {motorista.veiculo}</span>
             </span>
-            <span className="text-sm font-semibold tabular-nums text-emerald-900">
+            <span className="font-display text-sm font-bold text-ok tabular-nums">
               {moeda(servico.valor_motorista_centavos)}
             </span>
           </div>
-          <p className="text-xs text-emerald-800">
-            {servico.status === 'confirmado' ? 'Motorista já confirmou.' : 'Aguardando confirmação.'}
-          </p>
-          <button
-            type="button"
-            onClick={() => void avisarMotorista()}
-            className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white active:bg-emerald-700"
-          >
-            Avisar motorista
-          </button>
-          <button
-            type="button"
+
+          <div className="grid grid-cols-2 gap-2">
+            <Botao tom="ok" onClick={() => void avisarMotorista()}>
+              <Icone nome="whatsapp" className="h-4 w-4" />
+              Avisar
+            </Botao>
+            <Botao tom="contorno" onClick={() => void copiarLink()}>
+              <Icone nome="copiar" className="h-4 w-4" />
+              Copiar link
+            </Botao>
+          </div>
+
+          <Botao
+            tom="contorno"
+            largo
             disabled={!indicador}
             onClick={() =>
               indicador && abrirWhatsApp(indicador.telefone ?? '', mensagemParaIndicador(servico, indicador))
             }
-            className="w-full rounded-xl border border-emerald-600 px-4 py-3 font-semibold text-emerald-700 active:bg-emerald-100 disabled:opacity-40"
           >
-            Avisar indicador
-          </button>
+            Avisar {indicador ? indicador.nome : 'indicador'}
+          </Botao>
+
+          {(servico.status === 'confirmado' || servico.status === 'atribuido') && (
+            <Botao
+              tom="fantasma"
+              largo
+              disabled={indo}
+              onClick={() => void tentar(() => concluirServico(servico.id), 'Serviço concluído')}
+            >
+              <Icone nome="check" className="h-4 w-4" />
+              Marcar como concluído
+            </Botao>
+          )}
         </div>
       )}
 
-      <div>
-        <p className="mb-2 text-xs font-medium tracking-wide text-slate-500 uppercase">
-          {motorista ? 'Trocar motorista' : 'Escolher motorista'}
-        </p>
-        <div className="space-y-2">
-          {motoristas.map((m) => {
-            const disp = disponibilidadeDe(m, servico, servicos)
-            const rotulo =
-              disp.estado === 'livre'
-                ? 'Livre'
-                : disp.estado === 'ocupado'
-                  ? `Ocupado às ${disp.hora}`
-                  : 'Não cabe'
-            return (
-              <button
-                key={m.id}
-                type="button"
-                disabled={disp.estado === 'nao_cabe' || indo}
-                onClick={() => void escolher(m)}
-                className={`flex w-full items-center justify-between gap-3 rounded-2xl border bg-white p-3.5 text-left active:bg-slate-50 disabled:opacity-50 ${
-                  m.id === servico.motorista_id ? 'border-2 border-slate-900' : 'border-slate-200'
-                }`}
-              >
-                <span>
-                  <span className="block font-medium text-slate-900">{m.nome}</span>
-                  <span className="block text-xs text-slate-500">
-                    {m.veiculo} · {m.lugares} lugares
+      {encerrado && (
+        <Botao
+          tom="contorno"
+          largo
+          disabled={indo}
+          onClick={() => void tentar(() => reabrirServico(servico.id), 'Serviço reaberto')}
+        >
+          <Icone nome="volta" className="h-4 w-4" />
+          Reabrir o serviço
+        </Botao>
+      )}
+
+      {!encerrado && (
+        <div>
+          <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">
+            {motorista ? 'Trocar motorista' : 'Escolher motorista'}
+          </p>
+          <div className="space-y-2">
+            {motoristas.map((m) => {
+              const disp = disponibilidadeDe(m, servico, servicos)
+              const rotulo =
+                disp.estado === 'livre'
+                  ? 'Livre'
+                  : disp.estado === 'ocupado'
+                    ? `Ocupado às ${disp.hora}`
+                    : 'Não cabe'
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  disabled={disp.estado === 'nao_cabe' || indo}
+                  onClick={() => void escolher(m)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-colors disabled:opacity-40 ${
+                    m.id === servico.motorista_id
+                      ? 'border-destaque bg-destaque/10'
+                      : 'border-borda bg-superficie hover:border-bordaforte'
+                  }`}
+                >
+                  <span>
+                    <span className="block font-semibold text-tinta">{m.nome}</span>
+                    <span className="block text-xs text-tenue">
+                      {m.veiculo} · {m.lugares} lugares · {m.percentual}%
+                    </span>
                   </span>
-                </span>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${ETIQUETA[disp.estado]}`}>
-                  {rotulo}
-                </span>
-              </button>
-            )
-          })}
-          {motoristas.length === 0 && (
-            <p className="text-sm text-slate-500">Cadastre um motorista na aba Cadastros.</p>
-          )}
+                  <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-bold ${ETIQUETA[disp.estado]}`}>
+                    {rotulo}
+                  </span>
+                </button>
+              )
+            })}
+            {motoristas.length === 0 && (
+              <p className="text-sm text-tenue">Cadastre um motorista na aba Cadastros.</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {servico.status !== 'cancelado' && (
+        <button
+          type="button"
+          disabled={indo}
+          onClick={() => {
+            const motivo = window.prompt('Cancelar este serviço. Qual o motivo? (opcional)')
+            if (motivo === null) return
+            void tentar(async () => {
+              await cancelarServico(servico.id, motivo)
+              aoFechar()
+            }, 'Serviço cancelado')
+          }}
+          className="w-full pt-2 pb-1 text-center text-xs font-semibold text-alerta underline underline-offset-2"
+        >
+          cancelar este serviço
+        </button>
+      )}
     </div>
   )
 }

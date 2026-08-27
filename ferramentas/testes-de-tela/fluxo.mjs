@@ -17,12 +17,24 @@ const b = await chromium.launch({ executablePath: process.env.CHROMIUM ?? '/opt/
 
 function vigiar(p, quem) {
   p.on('pageerror', (e) => erros.push(`${quem}: ${e}`))
-  p.on('console', (m) => m.type() === 'error' && erros.push(`${quem}: ${m.text()}`))
+  p.on('console', (m) => {
+    // As fontes do Google não carregam nesta caixa de testes; no ar, carregam.
+    if (m.type() === 'error' && !/ERR_CONNECTION_RESET|fonts\.g/.test(m.text())) {
+      erros.push(`${quem}: ${m.text()}`)
+    }
+  })
 }
 
 // O real usa um espaço especial entre "R$" e o número; deixamos igual para comparar.
 async function texto(pagina) {
+  // innerText devolve o texto como aparece na tela: um título em maiúsculas por
+  // estilo vem em maiúsculas. Por isso comparamos tudo em minúsculas.
   return (await pagina.innerText('body')).replace(/\u00a0/g, ' ')
+}
+
+/** Confere se um texto aparece na tela, sem se importar com maiúsculas. */
+function contem(todo, parte) {
+  return todo.toLowerCase().includes(parte.toLowerCase())
 }
 
 const ok = []
@@ -37,11 +49,20 @@ vigiar(p, 'empresa')
 
 // ---------- 1. vitrine ----------
 await p.goto(RAIZ, { waitUntil: 'networkidle' })
+// Rola a página inteira para os blocos que aparecem ao rolar entrarem na foto.
+await p.evaluate(async () => {
+  for (let y = 0; y < document.body.scrollHeight; y += 400) {
+    window.scrollTo(0, y)
+    await new Promise((r) => setTimeout(r, 60))
+  }
+  window.scrollTo(0, 0)
+})
+await p.waitForTimeout(700)
 confere((await texto(p)).includes('Profissional'), 'a vitrine mostra os planos vindos do banco')
 await p.screenshot({ path: `${FOTOS}/n1-vitrine.png`, fullPage: true })
 
 // ---------- 2. criar conta da empresa ----------
-await p.getByRole('link', { name: 'Testar 7 dias grátis' }).click()
+await p.getByRole('link', { name: 'Testar 7 dias grátis' }).first().click()
 await p.getByLabel('E-mail').fill(donaEmail)
 await p.getByLabel(/Senha/).fill(SENHA)
 await p.getByRole('button', { name: 'Criar minha conta' }).click()
@@ -60,9 +81,9 @@ confere((await texto(p)).includes('Teste grátis'), 'entrou no app com o teste d
 await p.screenshot({ path: `${FOTOS}/n3-app-vazio.png`, fullPage: true })
 
 // ---------- 3. cadastros ----------
-await p.getByRole('link', { name: 'Cadastros' }).click()
+await p.getByRole('link', { name: 'Cadastros', exact: true }).click()
 await p.waitForTimeout(600)
-await p.getByRole('button', { name: '+ Adicionar motorista' }).click()
+await p.getByRole('button', { name: 'Novo' }).click()
 await p.getByLabel('Nome').fill('Jocemar')
 await p.getByLabel(/WhatsApp/).fill('5554999120031')
 await p.getByLabel('Veículo').fill('Spin')
@@ -73,7 +94,7 @@ await p.waitForTimeout(900)
 confere((await texto(p)).includes('Spin · 6 lugares · 40%'), 'motorista cadastrado no banco')
 
 await p.getByRole('button', { name: 'Indicadores' }).click()
-await p.getByRole('button', { name: '+ Adicionar indicador' }).click()
+await p.getByRole('button', { name: 'Novo' }).click()
 await p.getByLabel('Nome').fill('Pousada Vila Suíça')
 await p.getByLabel(/WhatsApp/).fill('555432958120')
 await p.getByLabel(/Comissão/).fill('10')
@@ -82,7 +103,7 @@ await p.waitForTimeout(900)
 confere((await texto(p)).includes('Comissão de 10%'), 'indicador cadastrado no banco')
 
 await p.getByRole('button', { name: 'Serviços' }).click()
-await p.getByRole('button', { name: '+ Adicionar serviço' }).click()
+await p.getByRole('button', { name: 'Novo' }).click()
 const hoje = new Date().toISOString().slice(0, 10)
 await p.getByLabel('Data').fill(hoje)
 await p.getByLabel('Hora').fill('14:20')
@@ -98,7 +119,7 @@ confere((await texto(p)).includes('R$ 480,00'), 'serviço cadastrado com o valor
 await p.screenshot({ path: `${FOTOS}/n4-cadastros.png`, fullPage: true })
 
 // ---------- 4. atribuir ----------
-await p.getByRole('link', { name: 'Hoje' }).click()
+await p.getByRole('link', { name: 'Hoje', exact: true }).click()
 await p.waitForTimeout(900)
 const hojeTexto = await texto(p)
 confere(hojeTexto.includes('1 serviço sem motorista'), 'a faixa vermelha aparece com o serviço sem motorista')
@@ -117,7 +138,7 @@ const linkWhats = await p.evaluate(async () => {
   const original = window.open
   let capturado = null
   window.open = (u) => { capturado = u; return null }
-  const botao = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Avisar motorista')
+  const botao = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Avisar')
   botao.click()
   await new Promise((r) => setTimeout(r, 1500))
   window.open = original
@@ -140,7 +161,7 @@ const telaMotorista = await texto(pm)
 confere(telaMotorista.includes('R$ 192,00'), 'o motorista vê o valor dele')
 confere(!telaMotorista.includes('480'), 'o motorista NÃO vê o valor do cliente')
 await pm.screenshot({ path: `${FOTOS}/n7-confirmar.png`, fullPage: true })
-await pm.getByRole('button', { name: 'Aceito' }).click()
+await pm.getByRole('button', { name: /Aceito o serviço/ }).click()
 await pm.waitForTimeout(1000)
 confere((await texto(pm)).includes('Serviço confirmado'), 'o motorista confirmou pelo link')
 await pm.screenshot({ path: `${FOTOS}/n8-confirmado.png`, fullPage: true })
@@ -151,7 +172,7 @@ await p.waitForTimeout(1200)
 confere(!(await texto(p)).includes('sem motorista'), 'na empresa, o serviço saiu da lista de pendentes')
 
 // ---------- 8. acerto ----------
-await p.getByRole('link', { name: 'Acerto' }).click()
+await p.getByRole('link', { name: 'Acerto', exact: true }).click()
 await p.waitForTimeout(1000)
 const acerto = await texto(p)
 confere(acerto.includes('R$ 480,00'), 'o acerto mostra o faturado do mês')
@@ -164,6 +185,7 @@ await p.goto(`${RAIZ}/app/assinatura`, { waitUntil: 'networkidle' })
 await p.waitForTimeout(800)
 const assinatura = await texto(p)
 confere(assinatura.includes('teste grátis') || assinatura.includes('Faltam'), 'a tela de assinatura mostra o teste correndo')
+confere(contem(assinatura, 'Indique e ganhe'), 'a tela de assinatura mostra o código de indicação')
 confere(assinatura.includes('R$ 199,00'), 'a tela de assinatura mostra os planos')
 await p.screenshot({ path: `${FOTOS}/n10-assinatura.png`, fullPage: true })
 
@@ -233,7 +255,7 @@ confere(painelAdmin.includes('R$ 199,00'), 'o painel mostra o dinheiro recebido 
 confere(painelAdmin.includes('ativa'), 'o painel mostra a assinatura como ativa depois do pagamento')
 await pa.screenshot({ path: `${FOTOS}/n12-admin-clientes.png`, fullPage: true })
 
-await pa.getByRole('button', { name: 'pagamentos' }).click()
+await pa.getByRole('button', { name: 'Pagamentos' }).click()
 await pa.waitForTimeout(600)
 const abaPagamentos = (await pa.innerText('body')).replace(/\u00a0/g, ' ')
 confere(abaPagamentos.includes('pago'), 'a aba de pagamentos mostra a cobrança paga')

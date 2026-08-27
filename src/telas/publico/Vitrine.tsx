@@ -9,28 +9,47 @@ import { NOME_DO_PRODUTO } from '../../config'
 import { planos as buscarPlanos } from '../../dados'
 import { moeda } from '../../lib/formato'
 import { useRevelarAoRolar } from '../../lib/revelar'
-import type { Plano } from '../../tipos'
+import type { Ciclo, Plano } from '../../tipos'
+
+const DORES = [
+  {
+    titulo: 'A ligação das onze da noite',
+    texto: 'Conferindo no caderno quem leva o voo das seis, e ligando para três motoristas até alguém atender.',
+  },
+  {
+    titulo: 'O transfer que furou',
+    texto: 'Dois serviços marcados no mesmo horário para o mesmo carro — e o hotel ligando atrás do passageiro.',
+  },
+  {
+    titulo: 'O acerto que não fecha',
+    texto: 'Fim do mês somando percentual de motorista na calculadora, e sempre falta um serviço em algum lugar.',
+  },
+  {
+    titulo: 'O valor que vazou',
+    texto: 'O motorista viu por acaso quanto o cliente pagou — e a conversa do mês seguinte começou torta.',
+  },
+]
 
 const PASSOS: { icone: NomeDeIcone; titulo: string; texto: string }[] = [
   {
     icone: 'mais',
     titulo: 'Lance o serviço',
-    texto: 'Data, hora, passageiro, origem, destino e valor. Vinte segundos, e o transfer de volta sai de um toque.',
+    texto: 'Data, hora, passageiro, rota e valor. Vinte segundos — e o transfer de volta sai de um toque.',
   },
   {
     icone: 'carro',
-    titulo: 'Escolha o motorista',
-    texto: 'A tela já mostra quem está livre naquele horário, quem tem outro serviço perto e em qual carro o grupo cabe.',
+    titulo: 'Escale quem está livre',
+    texto: 'A tela mostra quem já tem serviço naquele horário e em qual carro o grupo cabe. Sem conflito.',
   },
   {
     icone: 'whatsapp',
     titulo: 'Avise pelo WhatsApp',
-    texto: 'A mensagem sai pronta. O motorista abre o link e confirma sem instalar nada e sem criar conta.',
+    texto: 'A mensagem sai pronta. O motorista abre o link e confirma — sem instalar nada, sem criar conta.',
   },
   {
     icone: 'dinheiro',
-    titulo: 'Feche o mês',
-    texto: 'Quanto cada motorista tem a receber, quanto cada hotel indicou e quanto sobrou para a empresa.',
+    titulo: 'Feche o mês sozinho',
+    texto: 'Quanto cada motorista recebe, quanto cada hotel indicou, quanto sobrou para você. Pronto.',
   },
 ]
 
@@ -39,49 +58,57 @@ const DIFERENCAS: { icone: NomeDeIcone; titulo: string; texto: string }[] = [
     icone: 'usuario',
     titulo: 'O motorista nunca vê o valor do cliente',
     texto:
-      'Ele enxerga só o serviço e o valor dele. Isso não é uma tela escondida: no banco de dados, o motorista não tem permissão para chegar nesse número.',
+      'Ele enxerga o serviço e o valor dele, mais nada. Não é uma tela escondida: no banco de dados o motorista não tem permissão de chegar nesse número.',
   },
   {
     icone: 'raio',
-    titulo: 'Ninguém precisa instalar nada',
+    titulo: 'Ninguém instala nada',
     texto:
-      'O motorista recebe um link no WhatsApp, abre no navegador e confirma. Sem aplicativo, sem senha, sem treinamento.',
+      'O motorista recebe um link no WhatsApp e confirma ali mesmo. Sem aplicativo, sem senha, sem treinar equipe.',
   },
   {
     icone: 'relogio',
-    titulo: 'Escala sem conflito de horário',
+    titulo: 'Conflito de horário some',
     texto:
-      'Ao atribuir, o sistema avisa se o motorista já tem serviço a menos de duas horas e se o grupo não cabe no carro.',
+      'Na hora de escalar, o sistema avisa se o motorista tem outro serviço a menos de duas horas e se o grupo não cabe no carro.',
   },
 ]
 
 const PERGUNTAS = [
   {
     p: 'Preciso instalar alguma coisa?',
-    r: 'Não. Funciona pelo navegador, no celular e no computador. Dá para adicionar o atalho na tela de início e ele abre como um aplicativo.',
+    r: 'Não. Funciona pelo navegador, no celular e no computador. Dá para colocar o atalho na tela de início e abre como aplicativo.',
   },
   {
-    p: 'E os meus motoristas?',
-    r: 'Também não. Eles recebem um link pelo WhatsApp e confirmam ali mesmo. Quem quiser pode criar uma conta para ver todos os serviços num lugar só, mas é opcional.',
+    p: 'E os meus motoristas, vão conseguir usar?',
+    r: 'Eles não precisam aprender nada. Recebem um link pelo WhatsApp e tocam em "Aceito". Quem quiser pode criar conta para ver todos os serviços num lugar só, mas é opcional.',
   },
   {
     p: 'Como funciona o teste de 7 dias?',
-    r: 'Você se cadastra e usa tudo por 7 dias sem informar cartão. Se não quiser continuar, é só não assinar — não cobramos nada.',
+    r: 'Você se cadastra e usa tudo por 7 dias. Se não quiser continuar, é só não assinar.',
   },
   {
-    p: 'Como eu pago depois?',
-    r: 'Por PIX, boleto ou cartão, com renovação mensal. Cancela quando quiser, sem multa e sem fidelidade.',
+    p: 'Posso cancelar quando quiser?',
+    r: 'Pode, sem multa e sem fidelidade. No plano anual, o valor já sai com dois meses de desconto justamente porque é um compromisso maior.',
   },
   {
     p: 'Meus dados ficam misturados com os de outra empresa?',
-    r: 'Não. Cada empresa só enxerga o que é dela, e essa separação é garantida pelo banco de dados, não só pela tela.',
+    r: 'Não. Cada empresa enxerga apenas o que é dela, e essa separação é garantida pelo banco de dados, não só pela tela.',
+  },
+  {
+    p: 'E se eu precisar de ajuda?',
+    r: 'Tem um botão de suporte em todas as telas, que abre uma conversa direta no WhatsApp.',
   },
 ]
 
-/** Um cartão de serviço igual ao do sistema, para a pessoa ver antes de entrar. */
+/** Um cartão de serviço igual ao do sistema — mostrar vale mais que descrever. */
 function AmostraDaTela() {
   return (
-    <div className="painel w-full max-w-xs rounded-2xl p-4">
+    <div className="painel w-full max-w-sm rounded-2xl p-4">
+      <div className="mb-3 flex items-center gap-2 border-b border-borda pb-3">
+        <span className="h-2 w-2 rounded-full bg-alerta" />
+        <span className="text-xs font-semibold text-alerta">1 serviço sem motorista</span>
+      </div>
       <div className="flex items-center gap-2 text-xs">
         <span className="font-display font-bold text-tinta tabular-nums">14:20</span>
         <span className="rounded-md bg-superficie2 px-1.5 py-0.5 font-medium text-fraca">Transfer IN</span>
@@ -129,11 +156,17 @@ function Pergunta({ p, r }: { p: string; r: string }) {
 
 export function Vitrine() {
   const [planos, setPlanos] = useState<Plano[]>([])
+  const [ciclo, setCiclo] = useState<Ciclo>('mensal')
   useRevelarAoRolar()
 
   useEffect(() => {
     void buscarPlanos().then(setPlanos).catch(() => setPlanos([]))
   }, [])
+
+  const precoDe = (p: Plano) =>
+    ciclo === 'anual' ? (p.preco_anual_centavos ?? p.preco_centavos * 10) : p.preco_centavos
+
+  const economiaDe = (p: Plano) => p.preco_centavos * 12 - (p.preco_anual_centavos ?? p.preco_centavos * 10)
 
   return (
     <div className="min-h-screen bg-fundo">
@@ -161,62 +194,111 @@ export function Vitrine() {
       {/* ------------------------------------------------------------ abertura */}
       <section className="relative overflow-hidden">
         <EstradaNoturna className="absolute inset-0 h-full w-full opacity-70" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-fundo" />
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-b from-transparent to-fundo" />
 
-        <div className="relative mx-auto max-w-6xl px-5 pt-16 pb-20 sm:pt-24 sm:pb-28">
-          <p className="entra text-xs font-bold tracking-[0.2em] text-destaque uppercase">
-            Para empresas de transfer turístico
-          </p>
-          <h1 className="entra atraso-1 font-display mt-4 max-w-3xl text-4xl leading-[1.05] font-extrabold text-balance sm:text-6xl">
-            <span className="texto-destaque">A agenda do dia,</span>
-            <br />o motorista certo e o<br />
-            acerto do mês.
-          </h1>
-          <p className="entra atraso-2 mt-6 max-w-lg text-lg leading-relaxed text-fraca">
-            Larga a planilha e o caderno. Lance o serviço, escale quem está livre e avise pelo WhatsApp — o motorista
-            confirma sem instalar nada, e nunca vê o valor cobrado do cliente.
-          </p>
+        <div className="relative mx-auto grid max-w-6xl gap-12 px-5 pt-16 pb-20 sm:pt-24 sm:pb-28 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+          <div>
+            <p className="entra inline-flex items-center gap-2 rounded-full border border-borda bg-fundo2/70 px-3 py-1.5 text-xs font-semibold text-destaque backdrop-blur">
+              <span className="pulsa h-1.5 w-1.5 rounded-full bg-destaque" />
+              Feito para transfer turístico na serra
+            </p>
 
-          <div className="entra atraso-3 mt-8 flex flex-wrap items-center gap-3">
-            <BotaoLink para="/criar-conta" tamanho="grande">
-              Testar 7 dias grátis
-              <Icone nome="seta" className="h-4 w-4" />
-            </BotaoLink>
-            <a
-              href="#planos"
-              className="rounded-xl border border-bordaforte px-6 py-4 text-base font-semibold text-tinta transition-colors hover:bg-superficie2"
-            >
-              Ver os planos
-            </a>
+            <h1 className="entra atraso-1 font-display mt-5 text-4xl leading-[1.03] font-extrabold text-balance sm:text-6xl">
+              Sua operação inteira
+              <br />
+              <span className="texto-destaque">cabe numa tela.</span>
+            </h1>
+
+            <p className="entra atraso-2 mt-6 max-w-lg text-lg leading-relaxed text-fraca">
+              Larga o caderno e a planilha. Lance o serviço, escale quem está livre e avise pelo WhatsApp — o
+              motorista confirma sem instalar nada, e <strong className="text-tinta">nunca vê o valor cobrado do
+              cliente</strong>.
+            </p>
+
+            <div className="entra atraso-3 mt-8 flex flex-wrap items-center gap-3">
+              <BotaoLink para="/criar-conta" tamanho="grande">
+                Testar 7 dias grátis
+                <Icone nome="seta" className="h-4 w-4" />
+              </BotaoLink>
+              <a
+                href="#planos"
+                className="rounded-xl border border-bordaforte px-6 py-4 text-base font-semibold text-tinta transition-colors hover:bg-superficie2"
+              >
+                Ver os planos
+              </a>
+            </div>
+
+            <ul className="entra atraso-4 mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-tenue">
+              {['Cancela quando quiser', 'Sem fidelidade', 'Suporte no WhatsApp'].map((item) => (
+                <li key={item} className="flex items-center gap-1.5">
+                  <Icone nome="check" className="h-3.5 w-3.5 text-ok" traco={3} />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-          <p className="entra atraso-4 mt-4 text-sm text-tenue">Sem cartão para começar. Cancela quando quiser.</p>
 
-          <div className="entra atraso-5 mt-14 flex justify-center sm:justify-start">
+          <div className="entra atraso-5 flex justify-center lg:justify-end">
             <AmostraDaTela />
           </div>
         </div>
       </section>
 
-      {/* -------------------------------------------------------- como funciona */}
+      {/* ---------------------------------------------------------------- dor */}
       <section className="border-t border-borda bg-fundo2">
         <div className="mx-auto max-w-6xl px-5 py-20">
-          <h2 className="revela font-display text-3xl font-bold text-balance">Quatro passos, todo dia</h2>
-          <p className="revela mt-2 max-w-lg text-fraca">
-            É o mesmo caminho que você já faz no caderno — só que sem esquecer ninguém e com a conta pronta no fim do mês.
+          <p className="revela text-xs font-bold tracking-[0.2em] text-alerta uppercase">O jeito antigo</p>
+          <h2 className="revela font-display mt-3 max-w-2xl text-3xl font-bold text-balance sm:text-4xl">
+            Você não perde dinheiro por falta de cliente. Perde por falta de controle.
+          </h2>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            {DORES.map((dor, i) => (
+              <div
+                key={dor.titulo}
+                className="revela flex gap-4 rounded-2xl border border-borda bg-superficie/50 p-5"
+                style={{ transitionDelay: `${i * 60}ms` }}
+              >
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-alerta/12 text-alerta">
+                  <Icone nome="aviso" className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="font-display font-semibold text-tinta">{dor.titulo}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-fraca">{dor.texto}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="revela mx-auto mt-10 max-w-xl text-center text-lg text-balance text-fraca">
+            Nada disso é falta de capricho. É o caderno chegando no limite dele.
+          </p>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------- como funciona */}
+      <section className="relative overflow-hidden">
+        <div className="aurora relative mx-auto max-w-6xl px-5 py-20">
+          <p className="revela relative text-xs font-bold tracking-[0.2em] text-destaque uppercase">O jeito novo</p>
+          <h2 className="revela font-display relative mt-3 text-3xl font-bold text-balance sm:text-4xl">
+            Quatro passos, todo dia
+          </h2>
+          <p className="revela relative mt-2 max-w-lg text-fraca">
+            É o mesmo caminho que você já faz — sem esquecer ninguém e com a conta pronta no fim do mês.
           </p>
 
-          <ol className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="relative mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {PASSOS.map((passo, i) => (
               <li
                 key={passo.titulo}
                 className="revela painel rounded-2xl p-5"
                 style={{ transitionDelay: `${i * 70}ms` }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-destaque/12 text-destaque">
                     <Icone nome={passo.icone} className="h-4.5 w-4.5" />
                   </span>
-                  <span className="font-display text-xs font-bold text-tenue tabular-nums">
+                  <span className="font-display text-2xl font-extrabold text-borda tabular-nums">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                 </div>
@@ -229,13 +311,13 @@ export function Vitrine() {
       </section>
 
       {/* ----------------------------------------------------------- diferenças */}
-      <section className="relative overflow-hidden">
-        <div className="aurora relative mx-auto max-w-6xl px-5 py-20">
-          <h2 className="revela font-display relative text-3xl font-bold text-balance">
-            O que muda no dia a dia
+      <section className="border-t border-borda bg-fundo2">
+        <div className="mx-auto max-w-6xl px-5 py-20">
+          <h2 className="revela font-display text-3xl font-bold text-balance sm:text-4xl">
+            Três coisas que nenhuma planilha faz
           </h2>
 
-          <div className="relative mt-10 grid gap-5 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 lg:grid-cols-3">
             {DIFERENCAS.map((item, i) => (
               <div
                 key={item.titulo}
@@ -245,7 +327,7 @@ export function Vitrine() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-ok/12 text-ok">
                   <Icone nome={item.icone} className="h-5 w-5" />
                 </span>
-                <h3 className="font-display mt-4 text-lg font-semibold text-tinta text-balance">{item.titulo}</h3>
+                <h3 className="font-display mt-4 text-lg font-semibold text-balance text-tinta">{item.titulo}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-fraca">{item.texto}</p>
               </div>
             ))}
@@ -254,10 +336,32 @@ export function Vitrine() {
       </section>
 
       {/* --------------------------------------------------------------- planos */}
-      <section id="planos" className="scroll-mt-16 border-t border-borda bg-fundo2">
+      <section id="planos" className="scroll-mt-16">
         <div className="mx-auto max-w-6xl px-5 py-20">
-          <h2 className="revela font-display text-3xl font-bold">Planos</h2>
-          <p className="revela mt-2 text-fraca">Todos começam com 7 dias grátis, sem cartão.</p>
+          <div className="text-center">
+            <h2 className="revela font-display text-3xl font-bold sm:text-4xl">Planos</h2>
+            <p className="revela mt-2 text-fraca">Comece com 7 dias grátis. Depois, o plano que couber na sua frota.</p>
+
+            <div className="revela mt-7 inline-flex items-center gap-1 rounded-xl border border-borda bg-superficie p-1">
+              {(['mensal', 'anual'] as const).map((opcao) => (
+                <button
+                  key={opcao}
+                  type="button"
+                  onClick={() => setCiclo(opcao)}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold capitalize transition-colors ${
+                    ciclo === opcao ? 'bg-destaque text-[#04121f]' : 'text-fraca hover:text-tinta'
+                  }`}
+                >
+                  {opcao}
+                  {opcao === 'anual' && (
+                    <span className={`ml-1.5 text-xs ${ciclo === 'anual' ? 'text-[#04121f]/70' : 'text-ok'}`}>
+                      2 meses grátis
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {planos.map((plano, i) => {
@@ -267,7 +371,7 @@ export function Vitrine() {
                   key={plano.id}
                   className={`revela relative rounded-2xl p-6 ${
                     destaque
-                      ? 'border-2 border-destaque bg-superficie shadow-[0_30px_60px_-30px_var(--c-destaque)]'
+                      ? 'border-2 border-destaque bg-superficie shadow-[0_30px_70px_-35px_var(--c-destaque)]'
                       : 'painel'
                   }`}
                   style={{ transitionDelay: `${i * 70}ms` }}
@@ -279,20 +383,23 @@ export function Vitrine() {
                   )}
                   <h3 className="font-display text-xl font-bold text-tinta">{plano.nome}</h3>
                   <p className="mt-1 min-h-10 text-sm text-fraca">{plano.descricao}</p>
+
                   <p className="mt-5 flex items-baseline gap-1.5">
                     <span className="font-display text-4xl font-extrabold text-tinta tabular-nums">
-                      {moeda(plano.preco_centavos)}
+                      {moeda(precoDe(plano))}
                     </span>
-                    <span className="text-sm text-tenue">por mês</span>
+                    <span className="text-sm text-tenue">{ciclo === 'anual' ? 'por ano' : 'por mês'}</span>
                   </p>
+                  {ciclo === 'anual' && (
+                    <p className="mt-1 text-xs font-semibold text-ok">
+                      Economia de {moeda(economiaDe(plano))} no ano
+                    </p>
+                  )}
+
                   <ul className="mt-6 space-y-2.5 text-sm text-fraca">
                     {[
-                      plano.limite_motoristas
-                        ? `Até ${plano.limite_motoristas} motoristas`
-                        : 'Motoristas à vontade',
-                      plano.limite_servicos_mes
-                        ? `${plano.limite_servicos_mes} serviços por mês`
-                        : 'Serviços à vontade',
+                      plano.limite_motoristas ? `Até ${plano.limite_motoristas} motoristas` : 'Motoristas à vontade',
+                      plano.limite_servicos_mes ? `${plano.limite_servicos_mes} serviços por mês` : 'Serviços à vontade',
                       'Aviso por WhatsApp',
                       'Acerto de motoristas e indicadores',
                       'Suporte por WhatsApp',
@@ -303,27 +410,47 @@ export function Vitrine() {
                       </li>
                     ))}
                   </ul>
-                  <BotaoLink
-                    para="/criar-conta"
-                    tom={destaque ? 'principal' : 'contorno'}
-                    largo
-                  >
-                    Começar o teste
-                  </BotaoLink>
+
+                  <div className="mt-6">
+                    <BotaoLink para="/criar-conta" tom={destaque ? 'principal' : 'contorno'} largo>
+                      Começar o teste
+                    </BotaoLink>
+                  </div>
                 </div>
               )
             })}
 
-            {planos.length === 0 && (
-              <p className="text-sm text-tenue">Não consegui carregar os planos agora.</p>
-            )}
+            {planos.length === 0 && <p className="text-sm text-tenue">Não consegui carregar os planos agora.</p>}
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ indicação */}
+      <section className="border-y border-borda bg-fundo2">
+        <div className="mx-auto max-w-4xl px-5 py-16">
+          <div className="revela painel flex flex-col items-start gap-6 rounded-3xl p-8 sm:flex-row sm:items-center">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-destaque/12 text-destaque">
+              <Icone nome="usuario" className="h-6 w-6" />
+            </span>
+            <div className="flex-1">
+              <h2 className="font-display text-xl font-bold text-balance text-tinta">
+                Indicou, os dois ganham um mês
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-fraca">
+                Toda empresa recebe um código. Quando alguém entra pelo seu código e vira cliente, você ganha um mês
+                grátis — e essa pessoa também. Sem limite de indicações.
+              </p>
+            </div>
+            <BotaoLink para="/criar-conta" tom="contorno">
+              Quero meu código
+            </BotaoLink>
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------------ perguntas */}
       <section className="mx-auto max-w-3xl px-5 py-20">
-        <h2 className="revela font-display text-3xl font-bold">Perguntas que sempre fazem</h2>
+        <h2 className="revela font-display text-3xl font-bold sm:text-4xl">Perguntas que sempre fazem</h2>
         <div className="revela mt-8">
           {PERGUNTAS.map((item) => (
             <Pergunta key={item.p} {...item} />
@@ -331,21 +458,22 @@ export function Vitrine() {
         </div>
       </section>
 
-      {/* ------------------------------------------------------------- chamada */}
-      <section className="border-t border-borda bg-fundo2">
-        <div className="mx-auto max-w-3xl px-5 py-20 text-center">
-          <h2 className="revela font-display text-3xl font-bold text-balance sm:text-4xl">
-            Comece hoje com a agenda de amanhã
+      {/* -------------------------------------------------------------- chamada */}
+      <section className="relative overflow-hidden border-t border-borda">
+        <div className="aurora relative mx-auto max-w-3xl px-5 py-24 text-center">
+          <h2 className="revela font-display relative text-3xl font-bold text-balance sm:text-5xl">
+            Amanhã de manhã, sem caderno.
           </h2>
-          <p className="revela mx-auto mt-3 max-w-md text-fraca">
+          <p className="revela relative mx-auto mt-4 max-w-md text-lg text-fraca">
             Leva menos de dois minutos para cadastrar a empresa e lançar o primeiro serviço.
           </p>
-          <div className="revela mt-8 flex justify-center">
+          <div className="revela relative mt-8 flex justify-center">
             <BotaoLink para="/criar-conta" tamanho="grande">
               Testar 7 dias grátis
               <Icone nome="seta" className="h-4 w-4" />
             </BotaoLink>
           </div>
+          <p className="revela relative mt-4 text-sm text-tenue">Cancela quando quiser. Sem fidelidade.</p>
         </div>
       </section>
 

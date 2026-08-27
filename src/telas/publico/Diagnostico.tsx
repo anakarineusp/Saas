@@ -6,14 +6,14 @@ import { supabase } from '../../supabase'
 type Estado = 'testando' | 'ok' | 'erro'
 
 function Linha({ titulo, valor, bom }: { titulo: string; valor: string; bom: boolean | null }) {
-  const cor = bom === null ? 'text-slate-500' : bom ? 'text-emerald-700' : 'text-red-700'
+  const cor = bom === null ? 'text-tenue' : bom ? 'text-ok' : 'text-alerta'
   const marca = bom === null ? '·' : bom ? '✓' : '✕'
   return (
-    <div className="flex gap-3 border-t border-slate-100 py-3 first:border-t-0 first:pt-0">
+    <div className="flex gap-3 border-t border-borda py-3 first:border-t-0 first:pt-0">
       <span className={`w-4 shrink-0 font-bold ${cor}`}>{marca}</span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-slate-900">{titulo}</span>
-        <span className="block text-xs break-all text-slate-500">{valor}</span>
+        <span className="block text-sm font-semibold text-tinta">{titulo}</span>
+        <span className="block text-xs break-all text-tenue">{valor}</span>
       </span>
     </div>
   )
@@ -43,14 +43,14 @@ export function Diagnostico() {
   const foiCorrigido = enderecoOriginal !== endereco && enderecoOriginal !== ''
 
   return (
-    <div className="mx-auto min-h-screen max-w-lg px-5 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Conferência da instalação</h1>
-      <p className="mt-1 text-sm text-slate-500">
+    <div className="mx-auto min-h-screen max-w-lg bg-fundo px-5 py-10">
+      <h1 className="font-display text-2xl font-bold text-tinta">Conferência da instalação</h1>
+      <p className="mt-1 text-sm text-fraca">
         Esta página mostra o que o site está usando neste momento. Serve para achar
         o que está faltando quando alguma coisa não funciona.
       </p>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="painel mt-6 rounded-2xl p-4">
         <Linha
           titulo="Endereço do banco de dados"
           valor={endereco || 'não configurado'}
@@ -82,20 +82,20 @@ export function Diagnostico() {
       </div>
 
       {estado === 'ok' && planos > 0 && (
-        <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <p className="mt-4 rounded-xl border border-ok/40 bg-ok/10 p-4 text-sm text-ok">
           Está tudo ligado. Pode usar o sistema normalmente.
         </p>
       )}
 
       {estado === 'ok' && planos === 0 && (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <p className="mt-4 rounded-xl border border-atencao/40 bg-atencao/10 p-4 text-sm text-atencao">
           O banco respondeu, mas está sem planos cadastrados. Volte no Supabase, em
           SQL Editor, e rode o arquivo <code>tudo-em-um.sql</code>.
         </p>
       )}
 
       {estado === 'erro' && (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div className="mt-4 rounded-xl border border-alerta/40 bg-alerta/10 p-4 text-sm text-alerta">
           <p className="font-semibold">O banco recusou a conversa.</p>
           <p className="mt-2">
             {/Invalid path/i.test(recado) &&
@@ -113,7 +113,7 @@ export function Diagnostico() {
       )}
 
       <p className="mt-8 text-center text-sm">
-        <Link to="/" className="text-slate-500 underline">
+        <Link to="/" className="text-fraca underline underline-offset-2 hover:text-tinta">
           voltar para o começo
         </Link>
       </p>

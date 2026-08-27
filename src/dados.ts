@@ -1,7 +1,7 @@
 // Único lugar do aplicativo que conversa com o banco de dados.
 import { supabase } from './supabase'
 import type {
-  Assinatura, Cliente, Indicador, Motorista, Perfil, Plano, Resumo, Servico, ServicoDoLink,
+  Ajustes, Assinatura, Ciclo, Cliente, Indicador, Motorista, Perfil, Plano, Resumo, Servico, ServicoDoLink,
 } from './tipos'
 
 function conferir<T>(resposta: { data: T | null; error: { message: string } | null }): T {
@@ -51,6 +51,7 @@ export async function criarEmpresa(dados: {
   telefone?: string
   documento?: string
   cidade?: string
+  indicacao?: string
 }) {
   return conferir(
     await supabase.rpc('criar_empresa', {
@@ -59,8 +60,15 @@ export async function criarEmpresa(dados: {
       p_telefone: dados.telefone ?? null,
       p_documento: dados.documento ?? null,
       p_cidade: dados.cidade ?? null,
+      p_indicacao: dados.indicacao ?? null,
     }),
   )
+}
+
+/** Confere um código de indicação e devolve o nome de quem indicou. */
+export async function conferirIndicacao(codigo: string): Promise<string | null> {
+  const { data } = await supabase.rpc('conferir_indicacao', { p_codigo: codigo })
+  return (data as string) ?? null
 }
 
 export async function aceitarConvite(token: string, seuNome: string) {
@@ -82,9 +90,44 @@ export async function escolherPlano(plano: string) {
   conferir(await supabase.rpc('escolher_plano', { p_plano: plano }))
 }
 
+// ------------------------------------------------------------------ ajustes
+
+const AJUSTES_PADRAO: Ajustes = {
+  exigir_cartao_no_teste: false,
+  meses_de_premio_por_indicacao: 1,
+  meses_gratis_no_anual: 2,
+}
+
+/** Os ajustes que a administração liga e desliga. Nunca deixa a tela sem resposta. */
+export async function ajustes(): Promise<Ajustes> {
+  const { data } = await supabase.from('configuracoes').select('chave, valor')
+  if (!data) return AJUSTES_PADRAO
+  const mapa = Object.fromEntries((data as { chave: string; valor: unknown }[]).map((l) => [l.chave, l.valor]))
+  return {
+    exigir_cartao_no_teste: mapa.exigir_cartao_no_teste === true || mapa.exigir_cartao_no_teste === 'true',
+    meses_de_premio_por_indicacao: Number(mapa.meses_de_premio_por_indicacao ?? 1),
+    meses_gratis_no_anual: Number(mapa.meses_gratis_no_anual ?? 2),
+  }
+}
+
+export async function salvarAjuste(chave: string, valor: unknown) {
+  conferir(
+    await supabase
+      .from('configuracoes')
+      .update({ valor, atualizada_em: new Date().toISOString() })
+      .eq('chave', chave)
+      .select(),
+  )
+}
+
+export async function salvarPlano(plano: Partial<Plano> & { id: string }) {
+  const { id, ...resto } = plano
+  conferir(await supabase.from('planos').update(resto).eq('id', id).select())
+}
+
 /** Fala com o servidor que cria a assinatura na empresa de pagamentos. */
-export async function abrirCheckout(plano: string): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('assinar', { body: { plano } })
+export async function abrirCheckout(plano: string, ciclo: Ciclo = 'mensal'): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('assinar', { body: { plano, ciclo } })
   if (error) throw new Error('Não consegui abrir o pagamento. Tente de novo em instantes.')
   if (!data?.checkout) throw new Error(data?.erro ?? 'A empresa de pagamentos não devolveu o link.')
   return data.checkout as string
@@ -160,6 +203,10 @@ export async function excluirServico(id: string) {
   conferir(await supabase.from('servicos').delete().eq('id', id).select())
 }
 
+export async function concluirServico(id: string, concluido = true) {
+  conferir(await supabase.rpc('concluir_servico', { p_servico_id: id, p_concluido: concluido }))
+}
+
 export async function atribuirMotorista(servicoId: string, motoristaId: string) {
   conferir(await supabase.rpc('atribuir_motorista', { p_servico_id: servicoId, p_motorista_id: motoristaId }))
 }
@@ -196,6 +243,22 @@ export async function servicoDoLink(token: string): Promise<ServicoDoLink | null
 
 export async function confirmarPeloLink(token: string) {
   conferir(await supabase.rpc('confirmar_pelo_link', { p_token: token }))
+}
+
+export async function recusarPeloLink(token: string, motivo?: string) {
+  conferir(await supabase.rpc('recusar_pelo_link', { p_token: token, p_motivo: motivo ?? null }))
+}
+
+export async function recusarServico(id: string, motivo?: string) {
+  conferir(await supabase.rpc('recusar_servico', { p_servico_id: id, p_motivo: motivo ?? null }))
+}
+
+export async function cancelarServico(id: string, motivo?: string) {
+  conferir(await supabase.rpc('cancelar_servico', { p_servico_id: id, p_motivo: motivo ?? null }))
+}
+
+export async function reabrirServico(id: string) {
+  conferir(await supabase.rpc('reabrir_servico', { p_servico_id: id }))
 }
 
 // -------------------------------------------------- painel de quem vende o sistema
