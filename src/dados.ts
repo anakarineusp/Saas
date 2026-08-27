@@ -1,5 +1,5 @@
 // Único lugar do aplicativo que conversa com o banco de dados.
-import { supabase } from './supabase'
+import { supabase, VERSAO_DO_BANCO_ESPERADA } from './supabase'
 import type {
   Acompanhamento, Ajustes, Assinatura, AvaliacaoDoLink, Ciclo, Cliente, Cupom, Indicador, Indicadores,
   MesDeReceita, Motorista, Pendencia, Perfil, Plano, Reputacao, Resumo, Rota, Servico, ServicoDoLink,
@@ -10,8 +10,21 @@ function conferir<T>(resposta: { data: T | null; error: { message: string } | nu
   return resposta.data as T
 }
 
+const BANCO_DESATUALIZADO =
+  'O banco de dados está desatualizado: falta rodar a última versão do arquivo ' +
+  'docs/tudo-em-um.sql no Supabase. Abra /diagnostico para conferir.'
+
 /** Deixa o recado do banco em português de gente. */
 function traduzir(mensagem: string): string {
+  // Função ou coluna que o site pede e o banco ainda não tem: quase sempre é
+  // porque o arquivo do banco não foi rodado depois de uma atualização.
+  if (
+    /Could not find the function|schema cache|does not exist|relation .* does not exist|column .* does not exist/i.test(
+      mensagem,
+    )
+  ) {
+    return BANCO_DESATUALIZADO
+  }
   if (/Invalid login credentials/i.test(mensagem)) return 'E-mail ou senha não conferem.'
   if (/User already registered/i.test(mensagem)) return 'Já existe uma conta com esse e-mail.'
   if (/Password should be at least/i.test(mensagem)) return 'A senha precisa ter pelo menos 6 letras ou números.'
@@ -41,6 +54,15 @@ export async function sair() {
  * Sempre filtrando pelo próprio usuário: a administração enxerga todos os
  * perfis, então sem esse filtro ela receberia o perfil de outra pessoa.
  */
+/** Em que versão o banco está. Devolve 0 quando nem essa pergunta ele entende. */
+export async function versaoDoBanco(): Promise<number> {
+  const { data, error } = await supabase.rpc('versao_do_banco')
+  if (error) return 0
+  return Number(data ?? 0)
+}
+
+export const VERSAO_ESPERADA = VERSAO_DO_BANCO_ESPERADA
+
 export async function meuPerfil(usuarioId: string): Promise<Perfil | null> {
   const { data } = await supabase.from('perfis').select('*').eq('id', usuarioId).limit(1)
   return (data?.[0] as Perfil) ?? null

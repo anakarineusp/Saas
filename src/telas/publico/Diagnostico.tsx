@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { versaoDoBanco, VERSAO_ESPERADA } from '../../dados'
 import { chave, endereco, enderecoOriginal } from '../../supabase'
 import { supabase } from '../../supabase'
 
@@ -24,9 +25,11 @@ export function Diagnostico() {
   const [estado, setEstado] = useState<Estado>('testando')
   const [recado, setRecado] = useState('')
   const [planos, setPlanos] = useState(0)
+  const [versao, setVersao] = useState<number | null>(null)
 
   useEffect(() => {
     void (async () => {
+      setVersao(await versaoDoBanco())
       const { data, error } = await supabase.from('planos').select('id')
       if (error) {
         setEstado('erro')
@@ -69,6 +72,19 @@ export function Diagnostico() {
           bom={chave.length > 20}
         />
         <Linha
+          titulo="Versão do banco de dados"
+          valor={
+            versao === null
+              ? 'conferindo…'
+              : versao === 0
+                ? 'este banco ainda não sabe dizer a versão — está desatualizado'
+                : versao >= VERSAO_ESPERADA
+                  ? `versão ${versao}, em dia`
+                  : `versão ${versao}, e o site precisa da ${VERSAO_ESPERADA}`
+          }
+          bom={versao === null ? null : versao >= VERSAO_ESPERADA}
+        />
+        <Linha
           titulo="Conversa com o banco de dados"
           valor={
             estado === 'testando'
@@ -81,7 +97,21 @@ export function Diagnostico() {
         />
       </div>
 
-      {estado === 'ok' && planos > 0 && (
+      {versao !== null && versao < VERSAO_ESPERADA && (
+        <div className="mt-4 rounded-xl border border-atencao/40 bg-atencao/10 p-4 text-sm text-atencao">
+          <p className="font-semibold">O banco de dados está atrás do site.</p>
+          <p className="mt-2 leading-relaxed">
+            O sistema ganhou recursos novos, e as regras deles ainda não foram aplicadas aqui. Enquanto isso, criar
+            conta e outras coisas vão falhar.
+          </p>
+          <p className="mt-2 leading-relaxed">
+            <strong>Como resolver:</strong> abra o arquivo <code>docs/tudo-em-um.sql</code> no GitHub, copie tudo,
+            cole no SQL Editor do Supabase e clique em Run. Pode rodar por cima do que já existe, sem medo.
+          </p>
+        </div>
+      )}
+
+      {estado === 'ok' && planos > 0 && versao !== null && versao >= VERSAO_ESPERADA && (
         <p className="mt-4 rounded-xl border border-ok/40 bg-ok/10 p-4 text-sm text-ok">
           Está tudo ligado. Pode usar o sistema normalmente.
         </p>

@@ -23,6 +23,13 @@ export const chave = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').trim()
 
 export const faltaConfigurar = !endereco || !chave
 
+/**
+ * Até onde o banco precisa estar montado para este site funcionar.
+ * Sobe junto com cada migração nova. Se o banco estiver atrás disso, o site
+ * avisa em vez de dar erro solto pelo caminho.
+ */
+export const VERSAO_DO_BANCO_ESPERADA = 16
+
 export const supabase = createClient(endereco || 'http://localhost', chave || 'sem-chave', {
   auth: { persistSession: true, autoRefreshToken: true },
 })

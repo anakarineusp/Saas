@@ -44,6 +44,16 @@ quem quiser ver todos os serviços num lugar só.
 
 O passo a passo está em [`docs/como-colocar-no-ar.md`](docs/como-colocar-no-ar.md).
 
+## Quando o site ganhar recursos novos
+
+O site e o banco são duas coisas separadas: a Vercel publica o site sozinha, mas
+as regras do banco precisam ser aplicadas à mão, uma vez, no SQL Editor do
+Supabase. Sempre o mesmo arquivo: [`docs/tudo-em-um.sql`](docs/tudo-em-um.sql).
+
+O sistema sabe quando isso está pendente: a página `/diagnostico` compara a
+versão do banco com a que o site espera e diz o que fazer. Erros do tipo
+*"não foi possível encontrar a função ... no cache de esquema"* são sempre isso.
+
 ## Como rodar na sua máquina
 
 ```bash

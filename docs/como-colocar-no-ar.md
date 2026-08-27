@@ -36,6 +36,19 @@ Se der algum recado em vermelho, me mande a foto da tela que eu vejo o que foi.
 > Se você errar e rodar duas vezes, não tem problema nenhum: o arquivo foi feito
 > para poder ser rodado de novo sem estragar nada.
 
+### ⚠️ Toda vez que o sistema ganhar recursos novos, rode este arquivo de novo
+
+O site e o banco de dados são duas coisas separadas. Quando eu acrescento uma
+função nova, o site se atualiza sozinho pela Vercel — **mas o banco não**. Se
+você publicar o site novo sem rodar o arquivo, aparecem erros como
+*"Não foi possível encontrar a função ... no cache de esquema"*, e coisas como
+criar conta param de funcionar.
+
+O sistema avisa quando isso acontece: abra o endereço do site com
+`/diagnostico` no fim e ele diz em que versão o banco está e qual o site
+precisa. Para resolver, é sempre a mesma coisa: copiar o arquivo e rodar de
+novo.
+
 ### Pegar as duas chaves
 
 7. No menu da esquerda, lá embaixo, clique em **Project Settings** (a engrenagem).
