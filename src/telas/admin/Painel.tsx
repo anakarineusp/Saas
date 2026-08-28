@@ -246,12 +246,19 @@ function FormCliente({
             <option value="cancelada">Cancelada</option>
           </Selecao>
         </Campo>
-        <Campo rotulo="Plano">
+        <Campo rotulo="Plano" dica={`${cliente.motoristas} ${cliente.motoristas === 1 ? 'motorista' : 'motoristas'} cadastrados.`}>
           <Selecao value={plano} onChange={(e) => setPlano(e.target.value)}>
             <option value="">Sem plano</option>
-            {planos.map((p) => (
-              <option key={p.id} value={p.id}>{p.nome}</option>
-            ))}
+            {planos.map((p) => {
+              // Um plano menor do que a operação não é oferecido: o banco barraria.
+              const cabe = p.limite_motoristas === null || cliente.motoristas <= p.limite_motoristas
+              return (
+                <option key={p.id} value={p.id} disabled={!cabe}>
+                  {p.nome}
+                  {cabe ? '' : ` — não cabe, ${cliente.motoristas} motoristas`}
+                </option>
+              )
+            })}
           </Selecao>
         </Campo>
       </div>

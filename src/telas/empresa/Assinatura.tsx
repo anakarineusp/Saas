@@ -40,6 +40,8 @@ export function Assinatura() {
       .finally(() => setCarregando(false))
   }, [])
 
+  const motoristasCadastrados = assinatura?.motoristas_cadastrados ?? 0
+
   const precoDe = (p: Plano) =>
     ciclo === 'anual' ? (p.preco_anual_centavos ?? p.preco_centavos * 10) : p.preco_centavos
 
@@ -114,6 +116,19 @@ export function Assinatura() {
         </div>
       )}
 
+      {assinatura?.acima_do_limite && (
+        <div className="painel mt-4 rounded-2xl border-l-2 border-l-atencao p-4">
+          <p className="font-display font-bold text-tinta">Sua operação está maior que o plano</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-fraca">
+            O plano {assinatura.plano} é para {assinatura.limite_motoristas === 1
+              ? 'quem dirige sozinho'
+              : `até ${assinatura.limite_motoristas} motoristas`}
+            , e você tem {motoristasCadastrados} cadastrados. Escolha um plano maior aqui embaixo, ou exclua os
+            motoristas que sobram em Cadastros.
+          </p>
+        </div>
+      )}
+
       <div className="mt-4">
         <Erro>{erro}</Erro>
       </div>
@@ -167,6 +182,8 @@ export function Assinatura() {
       <div className="mt-3 space-y-3">
         {planos.map((plano) => {
           const atual = assinatura?.plano_id === plano.id && assinatura.status === 'ativa' && assinatura.ciclo === ciclo
+          // Ninguém entra num plano menor do que a própria operação já é.
+          const cabe = plano.limite_motoristas === null || motoristasCadastrados <= plano.limite_motoristas
           return (
             <div key={plano.id} className={`rounded-2xl p-4 ${atual ? 'painel border-l-2 border-l-ok' : 'painel'}`}>
               <div className="flex items-baseline justify-between gap-3">
@@ -180,14 +197,26 @@ export function Assinatura() {
               <p className="mt-1 text-xs text-tenue">
                 {plano.limite_motoristas ? `Até ${plano.limite_motoristas} motoristas` : 'Motoristas à vontade'}
               </p>
+              {!cabe && (
+                <p className="mt-2 text-xs text-atencao">
+                  Você tem {motoristasCadastrados} motoristas cadastrados. Para entrar neste plano, exclua os que
+                  sobram em Cadastros.
+                </p>
+              )}
               <div className="mt-3">
                 <Botao
                   largo
                   tom={atual ? 'contorno' : 'principal'}
-                  disabled={atual || indo !== ''}
+                  disabled={atual || !cabe || indo !== ''}
                   onClick={() => void assinar(plano)}
                 >
-                  {atual ? 'Seu plano atual' : indo === plano.id ? 'Abrindo o pagamento…' : 'Assinar'}
+                  {atual
+                    ? 'Seu plano atual'
+                    : !cabe
+                      ? 'Não cabe na sua operação'
+                      : indo === plano.id
+                        ? 'Abrindo o pagamento…'
+                        : 'Assinar'}
                 </Botao>
               </div>
             </div>

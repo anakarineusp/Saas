@@ -12,9 +12,17 @@ import { moeda } from '../../lib/formato'
 import type { Plano } from '../../tipos'
 import { useSessao } from '../../sessao'
 
-/** Segundo passo do cadastro: os dados da empresa. */
+/** Em uma linha, quanta gente cabe no plano. */
+function porteDoPlano(limite: number | null): string {
+  if (limite === null) return 'Motoristas à vontade, sem limite'
+  if (limite === 1) return 'Um motorista: você'
+  return `Até ${limite} motoristas`
+}
+
+/** Segundo passo do cadastro: o plano do teste e os dados da empresa. */
 export function SuaEmpresa() {
   const { carregando, entrou, perfil, recarregar } = useSessao()
+  const [parametros] = useSearchParams()
   const [empresa, setEmpresa] = useState('')
   const [seuNome, setSeuNome] = useState('')
   const [telefone, setTelefone] = useState('')
@@ -22,31 +30,42 @@ export function SuaEmpresa() {
   const [documento, setDocumento] = useState('')
   const [indicacao, setIndicacao] = useState('')
   const [cupom, setCupom] = useState('')
-  const [parametros] = useSearchParams()
-  const [planoEscolhido, setPlanoEscolhido] = useState(parametros.get('plano') ?? 'equipe')
+  // Sem plano escolhido de fábrica: a escolha é dela, e é o primeiro passo.
+  const [planoEscolhido, setPlanoEscolhido] = useState(parametros.get('plano') ?? '')
   const [erro, setErro] = useState('')
   const [indo, setIndo] = useState(false)
 
-  // Quando a administração liga o cartão no teste, aparece um segundo passo.
+  // Quando a administração liga o cartão no teste, aparece um terceiro passo.
   const [pedeCartao, setPedeCartao] = useState(false)
   const [planos, setPlanos] = useState<Plano[]>([])
-  const [passo, setPasso] = useState<'empresa' | 'cartao'>('empresa')
-  const [plano, setPlano] = useState('')
+  const [erroDosPlanos, setErroDosPlanos] = useState('')
+  const [passo, setPasso] = useState<'plano' | 'empresa' | 'cartao'>('plano')
   const [cartao, setCartao] = useState({ nome: '', numero: '', mes: '', ano: '', codigo: '' })
   const [titular, setTitular] = useState({ nome: '', documento: '', cep: '', numero: '' })
   const navegar = useNavigate()
+
+  function carregarPlanos() {
+    setErroDosPlanos('')
+    void buscarPlanos()
+      .then((lista) => {
+        setPlanos(lista)
+        setPlanoEscolhido((atual) => (lista.some((p) => p.id === atual) ? atual : ''))
+      })
+      .catch((e) => {
+        setPlanos([])
+        setErroDosPlanos((e as Error).message)
+      })
+  }
 
   useEffect(() => {
     void buscarAjustes()
       .then((a) => setPedeCartao(a.exigir_cartao_no_teste))
       .catch(() => setPedeCartao(false))
-    void buscarPlanos()
-      .then((lista) => {
-        setPlanos(lista)
-        setPlano((atual) => atual || lista[1]?.id || lista[0]?.id || '')
-      })
-      .catch(() => setPlanos([]))
+    carregarPlanos()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const escolhido = planos.find((p) => p.id === planoEscolhido)
 
   async function enviar() {
     setErro('')
@@ -79,7 +98,7 @@ export function SuaEmpresa() {
     setErro('')
     setIndo(true)
     try {
-      await iniciarTesteComCartao({ plano, cartao, titular })
+      await iniciarTesteComCartao({ plano: planoEscolhido, cartao, titular })
       await recarregar()
       navegar('/app')
     } catch (e) {
@@ -106,8 +125,79 @@ export function SuaEmpresa() {
     return <Navigate to={destino} replace />
   }
 
+  // ------------------------------------------------------- passo 1: o plano
+  if (passo === 'plano') {
+    return (
+      <MolduraPublica
+        titulo="Qual plano você quer testar?"
+        subtitulo="Os 7 dias são grátis em qualquer um dos três. Escolha pelo tamanho da sua operação — dá para trocar depois, dentro do aplicativo."
+      >
+        <div className="space-y-3">
+          {planos.map((p) => {
+            const marcado = planoEscolhido === p.id
+            return (
+              <button
+                key={p.id}
+                type="button"
+                aria-pressed={marcado}
+                onClick={() => setPlanoEscolhido(p.id)}
+                className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors ${
+                  marcado ? 'border-destaque bg-superficie2' : 'border-borda hover:border-bordaforte'
+                }`}
+              >
+                <span
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                    marcado ? 'border-destaque bg-destaque' : 'border-bordaforte'
+                  }`}
+                >
+                  {marcado && <Icone nome="check" className="h-3 w-3 text-[#08121c]" traco={3} />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="font-display font-bold text-tinta">{p.nome}</span>
+                    <span className="shrink-0 text-xs text-tenue tabular-nums">
+                      {moeda(p.preco_centavos)}/mês depois do teste
+                    </span>
+                  </span>
+                  <span className="mt-1 block text-sm text-fraca">{p.descricao}</span>
+                  <span className="mt-1.5 block text-xs font-semibold text-destaque">
+                    {porteDoPlano(p.limite_motoristas)}
+                  </span>
+                </span>
+              </button>
+            )
+          })}
+
+          {planos.length === 0 && (
+            <div className="painel rounded-2xl p-4">
+              <p className="text-sm text-fraca">
+                {erroDosPlanos ? `Não consegui carregar os planos: ${erroDosPlanos}` : 'Carregando os planos…'}
+              </p>
+              {erroDosPlanos && (
+                <button
+                  type="button"
+                  onClick={carregarPlanos}
+                  className="mt-2 text-sm font-semibold text-destaque underline underline-offset-2"
+                >
+                  Tentar de novo
+                </button>
+              )}
+            </div>
+          )}
+
+          <Botao largo tamanho="grande" disabled={!escolhido} onClick={() => setPasso('empresa')}>
+            {escolhido ? `Testar o plano ${escolhido.nome}` : 'Escolha um plano para continuar'}
+          </Botao>
+          <p className="text-center text-xs text-tenue">
+            Hoje não sai nada do seu bolso. Você decide se assina no oitavo dia.
+          </p>
+        </div>
+      </MolduraPublica>
+    )
+  }
+
+  // ------------------------------------------------------- passo 3: o cartão
   if (passo === 'cartao') {
-    const escolhido = planos.find((p) => p.id === plano)
     return (
       <MolduraPublica
         titulo="Seu cartão"
@@ -120,19 +210,12 @@ export function SuaEmpresa() {
             void enviarCartao()
           }}
         >
-          <Campo rotulo="Plano">
-            <select
-              value={plano}
-              onChange={(e) => setPlano(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-borda bg-fundo2 px-3.5 py-3 text-tinta outline-none focus:border-destaque"
-            >
-              {planos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome} — {moeda(p.preco_centavos)} por mês
-                </option>
-              ))}
-            </select>
-          </Campo>
+          <div className="painel flex items-center justify-between gap-3 rounded-xl p-3.5">
+            <span className="text-sm text-fraca">
+              Plano <strong className="text-tinta">{escolhido?.nome}</strong> ·{' '}
+              {moeda(escolhido?.preco_centavos)} por mês
+            </span>
+          </div>
 
           <Campo rotulo="Nome impresso no cartão">
             <Entrada value={cartao.nome} onChange={(e) => setCartao({ ...cartao, nome: e.target.value })} />
@@ -194,10 +277,13 @@ export function SuaEmpresa() {
     )
   }
 
+  // ------------------------------------------------------ passo 2: a empresa
+  const solo = escolhido?.limite_motoristas === 1
+
   return (
     <MolduraPublica
-      titulo="Sua empresa"
-      subtitulo={pedeCartao ? 'Primeiro os dados da empresa. Depois, o cartão.' : 'Falta só isso para começar os 7 dias.'}
+      titulo={solo ? 'Sobre você' : 'Sua empresa'}
+      subtitulo={pedeCartao ? 'Primeiro os dados. Depois, o cartão.' : 'Falta só isso para começar os 7 dias.'}
     >
       <form
         className="space-y-4"
@@ -206,38 +292,25 @@ export function SuaEmpresa() {
           void enviar()
         }}
       >
-        <div>
-          <span className="mb-1.5 block text-xs font-semibold tracking-wide text-fraca uppercase">
-            Como é a sua operação
+        <div className="painel flex items-center justify-between gap-3 rounded-xl p-3.5">
+          <span className="min-w-0 text-sm text-fraca">
+            Testando o plano <strong className="text-tinta">{escolhido?.nome}</strong> ·{' '}
+            {porteDoPlano(escolhido?.limite_motoristas ?? null).toLowerCase()}
           </span>
-          <div className="grid gap-2">
-            {planos.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPlanoEscolhido(p.id)}
-                className={`rounded-xl border p-3.5 text-left transition-colors ${
-                  planoEscolhido === p.id ? 'border-destaque bg-superficie2' : 'border-borda hover:border-bordaforte'
-                }`}
-              >
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="font-semibold text-tinta">{p.nome}</span>
-                  <span className="text-xs text-tenue tabular-nums">{moeda(p.preco_centavos)}/mês</span>
-                </span>
-                <span className="mt-0.5 block text-xs text-fraca">{p.descricao}</span>
-              </button>
-            ))}
-          </div>
-          <p className="mt-1.5 text-xs text-tenue">
-            Dá para trocar depois. Os 7 dias são grátis em qualquer um.
-          </p>
+          <button
+            type="button"
+            onClick={() => setPasso('plano')}
+            className="shrink-0 text-sm font-semibold text-destaque underline underline-offset-2"
+          >
+            trocar
+          </button>
         </div>
 
-        <Campo rotulo={planoEscolhido === 'solo' ? 'Nome do seu serviço' : 'Nome da empresa'}>
+        <Campo rotulo={solo ? 'Nome do seu serviço' : 'Nome da empresa'}>
           <Entrada
             value={empresa}
             onChange={(e) => setEmpresa(e.target.value)}
-            placeholder={planoEscolhido === 'solo' ? 'Jocemar Transfer' : 'Serra Transfer'}
+            placeholder={solo ? 'Jocemar Transfer' : 'Serra Transfer'}
           />
         </Campo>
         <Campo rotulo="Seu nome">

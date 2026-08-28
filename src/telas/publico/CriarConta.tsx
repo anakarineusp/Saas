@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Erro } from '../../componentes/Aviso'
 import { Botao } from '../../componentes/Botao'
 import { Campo, Entrada } from '../../componentes/Campos'
@@ -14,6 +14,9 @@ export function CriarConta() {
   const [erro, setErro] = useState('')
   const [indo, setIndo] = useState(false)
   const [confirmeOEmail, setConfirmeOEmail] = useState(false)
+  const [parametros] = useSearchParams()
+  // O plano escolhido na página inicial viaja junto até o cadastro da empresa.
+  const plano = parametros.get('plano') ?? ''
   const navegar = useNavigate()
 
   async function enviar() {
@@ -30,7 +33,7 @@ export function CriarConta() {
           return
         }
       }
-      navegar('/sua-empresa')
+      navegar(plano ? `/sua-empresa?plano=${encodeURIComponent(plano)}` : '/sua-empresa')
     } catch (e) {
       setErro((e as Error).message)
     } finally {
@@ -60,7 +63,7 @@ export function CriarConta() {
   return (
     <MolduraPublica
       titulo="Teste 7 dias grátis"
-      subtitulo="Sem cartão. Só um e-mail e uma senha — a empresa você cadastra no passo seguinte."
+      subtitulo="Sem cartão. Só um e-mail e uma senha — o plano do teste e os dados você escolhe no passo seguinte."
       rodape={
         <>
           Já tem conta?{' '}

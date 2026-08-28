@@ -94,6 +94,8 @@ export type Assinatura = {
   modo: Modo
   limite_motoristas: number | null
   motoristas_cadastrados: number
+  /** Verdadeiro quando a empresa tem mais motoristas do que o plano permite. */
+  acima_do_limite: boolean
   preco_centavos: number | null
   proxima_cobranca: string | null
   teste_termina_em: string

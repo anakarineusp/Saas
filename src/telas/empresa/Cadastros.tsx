@@ -321,6 +321,7 @@ function FormServico({
 export function Cadastros() {
   const { perfil, assinatura } = useSessao()
   const solo = assinatura?.modo === 'solo'
+  const acimaDoLimite = assinatura?.acima_do_limite === true
   const avisar = useAvisar()
   const empresaId = perfil?.empresa_id ?? ''
   const [secao, setSecao] = useState<Secao>('servicos')
@@ -423,10 +424,23 @@ export function Cadastros() {
     <div className="px-5 pt-6">
       <h1 className="font-display text-2xl font-bold text-tinta">Cadastros</h1>
 
-      {solo && (
+      {solo && !acimaDoLimite && (
         <p className="mt-3 text-sm text-fraca">
           No plano Solo o motorista é você. Ajuste o seu carro em <strong className="text-tinta">Meu carro</strong>.
         </p>
+      )}
+
+      {acimaDoLimite && (
+        <div className="painel mt-3 rounded-2xl border-l-2 border-l-atencao p-4">
+          <p className="font-display font-bold text-tinta">
+            {solo ? 'Você está no plano Solo, mas tem mais de um motorista' : 'Você tem mais motoristas do que o plano permite'}
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-fraca">
+            {solo
+              ? 'O plano Solo é para quem dirige o próprio carro. Exclua os motoristas que sobram aqui embaixo, ou mude para o plano Equipe em Assinatura.'
+              : `São ${assinatura?.motoristas_cadastrados} cadastrados e o plano permite ${assinatura?.limite_motoristas}. Exclua os que sobram, ou mude de plano em Assinatura.`}
+          </p>
+        </div>
       )}
 
       <div className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-borda bg-superficie p-1">
@@ -476,7 +490,8 @@ export function Cadastros() {
               })()}
               aoEditar={() => setEditando({ tipo: 'motoristas', item: m })}
               aoExcluir={() => {
-                if (solo) {
+                // No Solo, o cadastro do próprio dono fica — os que sobraram de antes saem.
+                if (solo && m.perfil_id === perfil?.id && motoristas.length === 1) {
                   window.alert('No plano Solo o motorista é você — este cadastro não pode ser excluído.')
                   return
                 }

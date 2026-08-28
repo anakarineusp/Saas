@@ -70,8 +70,15 @@ await p.getByRole('button', { name: 'Criar minha conta' }).click()
 await p.waitForURL('**/sua-empresa', { timeout: 15000 })
 await p.screenshot({ path: `${FOTOS}/n2-sua-empresa.png`, fullPage: true })
 
-await p.getByRole('button', { name: /Equipe/ }).click()
+// O plano do teste é o primeiro passo, e ninguém passa dele sem escolher.
+confere(contem(await texto(p), 'Qual plano você quer testar'),
+        'o cadastro pergunta qual plano ela quer testar')
+confere(await p.getByRole('button', { name: 'Escolha um plano para continuar' }).isDisabled(),
+        'e não deixa seguir enquanto nenhum plano estiver marcado')
+await p.getByRole('button', { name: /Equipe/ }).first().click()
+await p.getByRole('button', { name: /Testar o plano/ }).click()
 await p.waitForTimeout(300)
+confere(contem(await texto(p), 'Testando o plano'), 'a tela seguinte lembra qual plano ela escolheu')
 await p.getByLabel('Nome da empresa').fill('Serra Transfer')
 await p.getByLabel('Seu nome').fill('Ana Karine')
 await p.getByLabel('WhatsApp').fill('5554999000001')
