@@ -62,64 +62,64 @@ export const VITRINE_PADRAO: ConteudoDaVitrine = {
     tema: 'escuro',
   },
   topo: {
-    etiqueta: 'Feito para transfer turístico na serra',
-    titulo_1: 'Sua operação inteira',
-    titulo_2: 'cabe numa tela.',
+    etiqueta: 'Transfer turístico · Serra Gaúcha',
+    titulo_1: 'Você lança,',
+    titulo_2: 'ele confirma.',
     subtitulo:
-      'Larga o caderno e a planilha. Lance o serviço, escale quem está livre e avise pelo WhatsApp — o motorista confirma sem instalar nada, e nunca vê o valor cobrado do cliente.',
+      'Agenda, escala e acerto para quem leva turista de van e carro executivo. O motorista recebe o serviço no WhatsApp e confirma num toque, sem instalar nada e sem enxergar quanto o cliente pagou.',
     botao: 'Testar 7 dias grátis',
-    botao_secundario: 'Ver os planos',
-    selos: ['Cancela quando quiser', 'Sem fidelidade', 'Suporte no WhatsApp'],
+    botao_secundario: 'Ver preços',
+    selos: ['7 dias grátis', 'Sem fidelidade', 'Suporte no WhatsApp'],
     imagem: '',
   },
   dores: {
-    etiqueta: 'O jeito antigo',
-    titulo: 'Você não perde dinheiro por falta de cliente. Perde por falta de controle.',
+    etiqueta: 'Como é hoje',
+    titulo: 'O caderno dá conta, até o dia em que não dá.',
     itens: [
       {
         titulo: 'A ligação das onze da noite',
-        texto: 'Conferindo no caderno quem leva o voo das seis, e ligando para três motoristas até alguém atender.',
+        texto: 'Procurando no caderno quem leva o voo das seis, e ligando para três motoristas até alguém atender.',
       },
       {
         titulo: 'O transfer que furou',
-        texto: 'Dois serviços marcados no mesmo horário para o mesmo carro — e o hotel ligando atrás do passageiro.',
+        texto: 'Dois serviços no mesmo horário para o mesmo carro, e o hotel ligando atrás do passageiro.',
       },
       {
         titulo: 'O acerto que não fecha',
-        texto: 'Fim do mês somando percentual de motorista na calculadora, e sempre falta um serviço em algum lugar.',
+        texto: 'Fim do mês na calculadora somando percentual de motorista, e sempre falta um serviço em algum lugar.',
       },
       {
         titulo: 'O valor que vazou',
-        texto: 'O motorista viu por acaso quanto o cliente pagou — e a conversa do mês seguinte começou torta.',
+        texto: 'O motorista viu por acaso quanto o cliente pagou, e a conversa do mês seguinte começou torta.',
       },
     ],
     fecho: 'Nada disso é falta de capricho. É o caderno chegando no limite dele.',
   },
   passos: {
-    etiqueta: 'O jeito novo',
-    titulo: 'Quatro passos, todo dia',
-    subtitulo: 'É o mesmo caminho que você já faz — sem esquecer ninguém e com a conta pronta no fim do mês.',
+    etiqueta: 'Como fica',
+    titulo: 'Quatro passos, todo dia.',
+    subtitulo: 'O mesmo caminho que você já faz. A diferença é que fica anotado sozinho.',
     itens: [
       {
         titulo: 'Lance o serviço',
-        texto: 'Data, hora, passageiro, rota e valor. Vinte segundos — e o transfer de volta sai de um toque.',
+        texto: 'Data, hora, passageiro, rota e valor. Vinte segundos. O transfer de volta sai de um toque.',
       },
       {
         titulo: 'Escale quem está livre',
-        texto: 'A tela mostra quem já tem serviço naquele horário e em qual carro o grupo cabe. Sem conflito.',
+        texto: 'A tela mostra quem já tem serviço naquele horário e em qual carro o grupo cabe.',
       },
       {
         titulo: 'Avise pelo WhatsApp',
-        texto: 'A mensagem sai pronta. O motorista abre o link e confirma — sem instalar nada, sem criar conta.',
+        texto: 'A mensagem sai pronta. O motorista abre o link e aceita ou recusa ali mesmo.',
       },
       {
-        titulo: 'Feche o mês sozinho',
-        texto: 'Quanto cada motorista recebe, quanto cada hotel indicou, quanto sobrou para você. Pronto.',
+        titulo: 'Feche o mês',
+        texto: 'Quanto cada motorista recebe, quanto cada hotel indicou, quanto sobrou para você.',
       },
     ],
   },
   diferencas: {
-    titulo: 'Três coisas que nenhuma planilha faz',
+    titulo: 'O que a planilha não faz',
     itens: [
       {
         titulo: 'O motorista nunca vê o valor do cliente',
@@ -127,35 +127,35 @@ export const VITRINE_PADRAO: ConteudoDaVitrine = {
           'Ele enxerga o serviço e o valor dele, mais nada. Não é uma tela escondida: no banco de dados o motorista não tem permissão de chegar nesse número.',
       },
       {
-        titulo: 'Ninguém instala nada',
+        titulo: 'Ninguém precisa instalar aplicativo',
         texto:
-          'O motorista recebe um link no WhatsApp e confirma ali mesmo. Sem aplicativo, sem senha, sem treinar equipe.',
+          'O motorista recebe um link no WhatsApp e responde ali mesmo. Sem baixar nada, sem senha, sem treinar equipe.',
       },
       {
-        titulo: 'Conflito de horário some',
+        titulo: 'O hotel acompanha sem ligar para você',
         texto:
-          'Na hora de escalar, o sistema avisa se o motorista tem outro serviço a menos de duas horas e se o grupo não cabe no carro.',
+          'Cada serviço tem um link de acompanhamento para mandar ao hotel e ao passageiro. Eles veem horário e motorista, nunca o valor.',
       },
     ],
   },
   planos: {
-    titulo: 'Planos',
-    subtitulo: 'Comece com 7 dias grátis. Depois, o plano do tamanho da sua operação.',
+    titulo: 'Do tamanho da sua operação.',
+    subtitulo: 'Sete dias grátis em qualquer plano. Depois você escolhe, e troca quando o time mudar.',
   },
   indicacao: {
     titulo: 'Indicou, os dois ganham um mês',
     texto:
-      'Toda empresa recebe um código. Quando alguém entra pelo seu código e vira cliente, você ganha um mês grátis — e essa pessoa também. Sem limite de indicações.',
+      'Toda empresa recebe um código. Quando alguém entra pelo seu código e vira cliente, vocês dois ganham um mês grátis. Sem limite de indicações.',
     botao: 'Quero meu código',
   },
   perguntas: [
     {
       p: 'Preciso instalar alguma coisa?',
-      r: 'Não. Funciona pelo navegador, no celular e no computador. Dá para colocar o atalho na tela de início e abre como aplicativo.',
+      r: 'Não. Funciona pelo navegador, no celular e no computador. Dá para colocar o atalho na tela de início e abre igual a um aplicativo.',
     },
     {
       p: 'E os meus motoristas, vão conseguir usar?',
-      r: 'Eles não precisam aprender nada. Recebem um link pelo WhatsApp e tocam em "Aceito". Quem quiser pode criar conta para ver todos os serviços num lugar só, mas é opcional.',
+      r: 'Eles não aprendem nada novo. Recebem um link pelo WhatsApp e tocam em "Aceito". Quem quiser pode criar conta para ver todos os serviços num lugar só, mas é opcional.',
     },
     {
       p: 'Eu dirijo sozinho, serve para mim?',
@@ -163,22 +163,22 @@ export const VITRINE_PADRAO: ConteudoDaVitrine = {
     },
     {
       p: 'Como funciona o teste de 7 dias?',
-      r: 'Você se cadastra e usa tudo por 7 dias. Se não quiser continuar, é só não assinar.',
+      r: 'Você escolhe o plano que quer experimentar, cadastra a empresa e usa tudo por 7 dias. Se não quiser continuar, é só não assinar.',
     },
     {
       p: 'Posso cancelar quando quiser?',
-      r: 'Pode, sem multa e sem fidelidade. No plano anual, o valor já sai com dois meses de desconto justamente porque é um compromisso maior.',
+      r: 'Pode, sem multa e sem fidelidade. No plano anual o valor já sai com dois meses de desconto, justamente porque é um compromisso maior.',
     },
     {
       p: 'Meus dados ficam misturados com os de outra empresa?',
-      r: 'Não. Cada empresa enxerga apenas o que é dela, e essa separação é garantida pelo banco de dados, não só pela tela.',
+      r: 'Não. Cada empresa enxerga apenas o que é dela, e essa separação é feita pelo banco de dados, não só pela tela.',
     },
   ],
   chamada: {
     titulo: 'Amanhã de manhã, sem caderno.',
-    texto: 'Leva menos de dois minutos para cadastrar a empresa e lançar o primeiro serviço.',
+    texto: 'Dois minutos para cadastrar a empresa e lançar o primeiro serviço.',
     botao: 'Testar 7 dias grátis',
-    rodape: 'Cancela quando quiser. Sem fidelidade.',
+    rodape: 'Cancela quando quiser.',
   },
   rodape: 'sistema para empresas de transfer turístico',
 }

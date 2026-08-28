@@ -12,8 +12,11 @@
 --------------------------------------------------------------------------- */
 
 @theme {
-  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Uma grotesca fechada para os títulos e uma de texto estreita para o resto:
+     o mesmo par que os aplicativos de mobilidade usam. O peso e o tamanho
+     fazem a hierarquia; a cor quase não entra nisso. */
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --color-fundo: var(--c-fundo);
   --color-fundo2: var(--c-fundo2);
@@ -85,6 +88,17 @@ html {
 
 body {
   @apply bg-fundo font-sans text-tinta antialiased;
+}
+
+/* Título de grotesca fechada pede entreletra negativa; sem isso fica com cara
+   de gabarito. Quanto maior o tamanho, mais apertado. */
+.font-display {
+  letter-spacing: -0.022em;
+}
+
+h1.font-display,
+.titulo-cartaz {
+  letter-spacing: -0.038em;
 }
 
 button,
@@ -243,22 +257,6 @@ textarea {
   background: var(--c-superficie);
   border: 1px solid var(--c-borda);
   box-shadow: var(--brilho);
-}
-
-/* Luz suave atrás do conteúdo principal. */
-.aurora::before {
-  content: '';
-  position: absolute;
-  inset: -30% -10% auto -10%;
-  height: 70%;
-  background: radial-gradient(
-    70% 60% at 25% 15%,
-    color-mix(in oklab, var(--c-destaque) 9%, transparent),
-    transparent 72%
-  );
-  filter: blur(50px);
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* Uma única palavra em outra cor vale mais que o título inteiro colorido. */

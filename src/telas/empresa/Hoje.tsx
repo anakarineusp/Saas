@@ -12,13 +12,59 @@ import {
   servicos as buscarServicos,
   linkDoServico,
 } from '../../dados'
-import { dataCurta, dataPorExtenso, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
+import { comoData, dataCurta, dataPorExtenso, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
+
+const SIGLAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 import { abrirWhatsApp, mensagemParaMotorista } from '../../lib/whatsapp'
 import { useAvisar } from '../../componentes/Avisos'
 import { useSessao } from '../../sessao'
 import { atribuirMotorista } from '../../dados'
 import type { Indicador, Motorista, Pendencia, Servico } from '../../tipos'
 import { Atribuir } from './Atribuir'
+
+/**
+ * Os dias em volta do escolhido, para andar na agenda sem abrir calendário.
+ * Sete dias começando três antes: o dia de hoje ganha um ponto embaixo.
+ */
+function FaixaDeDias({ dia, aoEscolher }: { dia: string; aoEscolher: (iso: string) => void }) {
+  const hoje = hojeISO()
+  const base = comoData(dia)
+  const dias = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base)
+    d.setDate(d.getDate() + i - 3)
+    return d
+  })
+
+  return (
+    <div className="mt-4 flex gap-1">
+      {dias.map((d) => {
+        const iso = paraISO(d)
+        const escolhido = iso === dia
+        return (
+          <button
+            key={iso}
+            type="button"
+            onClick={() => aoEscolher(iso)}
+            aria-current={escolhido ? 'date' : undefined}
+            className={`flex flex-1 flex-col items-center rounded-xl border py-2 transition-colors ${
+              escolhido
+                ? 'border-destaque bg-destaque text-[#08121c]'
+                : 'border-borda text-fraca hover:border-bordaforte hover:text-tinta'
+            }`}
+          >
+            <span className="text-[10px] tracking-wide uppercase">{SIGLAS[d.getDay()]}</span>
+            <span className="font-display text-base font-bold tabular-nums">{d.getDate()}</span>
+            <span
+              className={`mt-0.5 h-1 w-1 rounded-full ${
+                iso === hoje ? (escolhido ? 'bg-[#08121c]' : 'bg-destaque') : 'bg-transparent'
+              }`}
+            />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 function Cartao({ servico, aoTocar }: { servico: Servico; aoTocar: () => void }) {
   const semMotorista = !servico.motorista_id && servico.status !== 'cancelado'
@@ -131,12 +177,6 @@ export function Hoje() {
   const motoristasDoDia = new Set(ativos.map((s) => s.motorista_id).filter(Boolean)).size
   const servico = servicos.find((s) => s.id === aberto) ?? null
 
-  const outroDia = (passos: number) => {
-    const d = new Date(`${dia}T12:00:00`)
-    d.setDate(d.getDate() + passos)
-    setDia(paraISO(d))
-  }
-
   /** Cobra de novo quem ainda não respondeu, sem precisar abrir cada serviço. */
   async function recobrar() {
     setErro('')
@@ -159,46 +199,35 @@ export function Hoje() {
 
   return (
     <div className="px-5 pt-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold tracking-[0.15em] text-tenue uppercase">
             {dia === hojeISO() ? 'Hoje' : 'Agenda'}
           </p>
-          <h1 className="font-display mt-1 text-2xl font-bold text-tinta first-letter:uppercase">
+          <h1 className="font-display mt-0.5 truncate text-2xl font-extrabold text-tinta first-letter:uppercase">
             {dataPorExtenso(dia)}
           </h1>
-          <p className="mt-1 text-sm text-fraca">
-            {ativos.length} {ativos.length === 1 ? 'serviço' : 'serviços'} · {motoristasDoDia}{' '}
-            {motoristasDoDia === 1 ? 'motorista' : 'motoristas'}
-          </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 rounded-xl border border-borda bg-superficie p-1">
-          <button
-            type="button"
-            aria-label="Dia anterior"
-            onClick={() => outroDia(-1)}
-            className="rounded-lg px-2 py-1.5 text-fraca hover:bg-superficie2 hover:text-tinta"
-          >
-            ‹
-          </button>
+        <label className="shrink-0 cursor-pointer rounded-lg border border-borda p-2 text-fraca hover:text-tinta">
+          <Icone nome="calendario" className="h-4.5 w-4.5" />
+          <span className="sr-only">Escolher outro dia</span>
           <input
             type="date"
             value={dia}
             onChange={(e) => setDia(e.target.value || hojeISO())}
-            aria-label="Escolher o dia"
-            className="w-[7.5rem] bg-transparent text-center text-sm text-tinta outline-none"
+            className="sr-only"
           />
-          <button
-            type="button"
-            aria-label="Próximo dia"
-            onClick={() => outroDia(1)}
-            className="rounded-lg px-2 py-1.5 text-fraca hover:bg-superficie2 hover:text-tinta"
-          >
-            ›
-          </button>
-        </div>
+        </label>
       </div>
+
+      {/* A semana à vista: o dia de hoje marcado, e os vizinhos a um toque. */}
+      <FaixaDeDias dia={dia} aoEscolher={setDia} />
+
+      <p className="mt-3 text-sm text-fraca">
+        {ativos.length} {ativos.length === 1 ? 'serviço' : 'serviços'} · {motoristasDoDia}{' '}
+        {motoristasDoDia === 1 ? 'motorista' : 'motoristas'}
+      </p>
 
       <div className="mt-4">
         <Erro>{erro}</Erro>

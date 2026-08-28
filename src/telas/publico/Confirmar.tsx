@@ -72,7 +72,6 @@ export function Confirmar() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-fundo">
-      <div className="aurora absolute inset-0" />
 
       <div className="relative mx-auto max-w-md px-5 pt-6 pb-12">
         <div className="flex items-start justify-between">
