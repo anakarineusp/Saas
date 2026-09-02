@@ -50,7 +50,8 @@ else
   (cd "$RAIZ" && npm run dev -- --port 5173 --strictPort > /tmp/vite.log 2>&1) &
 fi
 VITE=$!
-trap 'kill $SERVIDOR $VITE 2>/dev/null || true' EXIT
+# O npm abre um filho; matar só o pai deixaria a porta presa para o próximo teste.
+trap 'kill $SERVIDOR 2>/dev/null; pkill -P $VITE 2>/dev/null; kill $VITE 2>/dev/null; true' EXIT
 
 for _ in $(seq 1 30); do
   if curl -sf http://localhost:5173 > /dev/null && curl -sf http://localhost:54321/rest/v1/planos > /dev/null; then break; fi

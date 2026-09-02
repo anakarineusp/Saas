@@ -21,7 +21,9 @@ function Estrelas({
   return (
     <div>
       <p className="mb-2 text-xs font-semibold tracking-wide text-fraca uppercase">{rotulo}</p>
-      <div className="flex gap-1.5">
+      {/* Estrela solta, sem caixa em volta: é assim que se avalia em qualquer
+          lugar, e o dedo acerta melhor num alvo grande. */}
+      <div className="flex gap-2">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
@@ -29,11 +31,18 @@ function Estrelas({
             onClick={() => aoMudar(n)}
             aria-label={`${n}`}
             aria-pressed={valor >= n}
-            className={`flex h-11 flex-1 items-center justify-center rounded-xl border transition-colors ${
-              valor >= n ? 'border-atencao/50 bg-atencao/10 text-atencao' : 'border-borda text-tenue hover:text-fraca'
+            className={`p-1 transition-transform active:scale-90 ${
+              valor >= n ? 'text-atencao' : 'text-bordaforte hover:text-fraca'
             }`}
           >
-            <svg viewBox="0 0 24 24" fill={valor >= n ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} className="h-5 w-5">
+            <svg
+              viewBox="0 0 24 24"
+              fill={valor >= n ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              className="h-9 w-9"
+            >
               <path d="m12 3.5 2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.9l6-.8L12 3.5Z" />
             </svg>
           </button>

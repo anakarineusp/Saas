@@ -252,7 +252,7 @@ function FormCliente({
             <option value="cancelada">Cancelada</option>
           </Selecao>
         </Campo>
-        <Campo rotulo="Plano" dica={`${cliente.motoristas} ${cliente.motoristas === 1 ? 'motorista' : 'motoristas'} cadastrados.`}>
+        <Campo rotulo="Plano" dica={`${cliente.motoristas} ${cliente.motoristas === 1 ? 'motorista cadastrado' : 'motoristas cadastrados'}.`}>
           <Selecao value={plano} onChange={(e) => setPlano(e.target.value)}>
             <option value="">Sem plano</option>
             {planos.map((p) => {
@@ -486,13 +486,19 @@ export function Painel() {
           <div className="mt-5">
             <Busca valor={procura} aoMudar={setProcura} placeholder="Procurar cliente" />
           </div>
-          <div className="mt-4 space-y-2">
+          <div
+            className={
+              clientesFiltrados.length > 0
+                ? 'painel mt-4 divide-y divide-borda overflow-hidden rounded-2xl'
+                : 'mt-4'
+            }
+          >
             {clientesFiltrados.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => setEditandoCliente(c)}
-                className="painel w-full rounded-2xl p-4 text-left transition-colors hover:border-bordaforte"
+                className="w-full p-4 text-left transition-colors hover:bg-superficie2"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -520,9 +526,13 @@ export function Painel() {
 
       {/* ----------------------------------------------------------- pagamentos */}
       {aba === 'pagamentos' && (
-        <div className="mt-5 space-y-2">
+        <div
+          className={
+            pagamentos.length > 0 ? 'painel mt-5 divide-y divide-borda overflow-hidden rounded-2xl' : 'mt-5'
+          }
+        >
           {pagamentos.map((p) => (
-            <div key={p.id} className="painel flex items-center justify-between gap-3 rounded-2xl p-4">
+            <div key={p.id} className="flex items-center justify-between gap-3 p-4">
               <div className="min-w-0">
                 <p className="truncate font-semibold text-tinta">{nomeDaEmpresa(p.empresa_id)}</p>
                 <p className="text-xs text-tenue">
@@ -542,7 +552,7 @@ export function Painel() {
 
       {/* --------------------------------------------------------------- planos */}
       {aba === 'planos' && (
-        <div className="mt-5 space-y-2">
+        <div className="painel mt-5 divide-y divide-borda overflow-hidden rounded-2xl">
           <p className="text-sm text-fraca">
             Toque num plano para mudar preço, nome ou limite. Vale na hora, sem publicar nada.
           </p>
@@ -551,7 +561,7 @@ export function Painel() {
               key={plano.id}
               type="button"
               onClick={() => setEditandoPlano(plano)}
-              className="painel flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-left transition-colors hover:border-bordaforte"
+              className="flex w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-superficie2"
             >
               <span className="min-w-0">
                 <span className="block font-display font-bold text-tinta">{plano.nome}</span>
@@ -574,7 +584,7 @@ export function Painel() {
 
       {/* --------------------------------------------------------------- cupons */}
       {aba === 'cupons' && (
-        <div className="mt-5 space-y-2">
+        <div className="painel mt-5 divide-y divide-borda overflow-hidden rounded-2xl">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-fraca">Cupons para os primeiros clientes e para negociação.</p>
             <Botao tamanho="pequeno" onClick={() => setEditandoCupom(null)}>
@@ -583,7 +593,7 @@ export function Painel() {
             </Botao>
           </div>
           {cupons.map((c) => (
-            <div key={c.codigo} className="painel flex items-center gap-3 rounded-2xl p-4">
+            <div key={c.codigo} className="flex items-center gap-3 p-4">
               <button type="button" onClick={() => setEditandoCupom(c)} className="min-w-0 flex-1 text-left">
                 <span className="font-display block font-bold tracking-wider text-tinta">{c.codigo}</span>
                 <span className="block truncate text-xs text-tenue">

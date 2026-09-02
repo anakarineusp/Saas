@@ -29,14 +29,15 @@ export function Folha({
   if (!aberta) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-40 flex flex-col items-center justify-end" role="dialog" aria-modal="true">
       <button
         type="button"
         aria-label="Fechar"
         onClick={aoFechar}
         className="surge absolute inset-0 bg-[#03060d]/80 backdrop-blur-sm"
       />
-      <div className="folha-sobe painel relative flex max-h-[92vh] flex-col rounded-t-3xl">
+      {/* No computador a folha não precisa atravessar a tela inteira. */}
+      <div className="folha-sobe painel relative flex max-h-[92vh] w-full max-w-md flex-col rounded-t-3xl">
         <div className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-bordaforte" />
         <div className="flex items-center justify-between px-5 py-3">
           <h2 className="font-display text-base font-semibold text-tinta">{titulo}</h2>
