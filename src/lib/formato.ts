@@ -22,6 +22,17 @@ export function hojeISO(): string {
   return paraISO(new Date())
 }
 
+/** "27 de agosto" — cabe numa linha só no celular. */
+export function diaEMes(iso: string): string {
+  const d = comoData(iso)
+  return `${d.getDate()} de ${MESES[d.getMonth()]}`
+}
+
+/** "quinta-feira" */
+export function diaDaSemana(iso: string): string {
+  return DIAS[comoData(iso).getDay()]
+}
+
 /** "quinta-feira, 27 de agosto" */
 export function dataPorExtenso(iso: string): string {
   const d = comoData(iso)

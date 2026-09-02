@@ -6,6 +6,7 @@ import { Etiqueta } from '../../componentes/Etiqueta'
 import { Icone } from '../../componentes/Icone'
 import { abrirCheckout, escolherPlano, planos as buscarPlanos } from '../../dados'
 import { dataCompleta, moeda } from '../../lib/formato'
+import { porteDoPlano } from '../../lib/planos'
 import { enderecoDoApp } from '../../lib/whatsapp'
 import { useSessao } from '../../sessao'
 import type { Ciclo, Plano } from '../../tipos'
@@ -94,7 +95,7 @@ export function Assinatura() {
           {assinatura.status === 'teste' && (
             <p className="mt-1.5 text-sm text-fraca">
               {assinatura.dias_de_teste > 0
-                ? `Faltam ${assinatura.dias_de_teste} ${assinatura.dias_de_teste === 1 ? 'dia' : 'dias'} — até ${dataCompleta(assinatura.teste_termina_em)}.`
+                ? `Faltam ${assinatura.dias_de_teste} ${assinatura.dias_de_teste === 1 ? 'dia' : 'dias'}, até ${dataCompleta(assinatura.teste_termina_em)}.`
                 : 'O teste terminou. Escolha um plano para continuar usando.'}
             </p>
           )}
@@ -138,7 +139,7 @@ export function Assinatura() {
         <div className="painel mt-4 rounded-2xl p-4">
           <p className="text-xs font-bold tracking-[0.15em] text-tenue uppercase">Indique e ganhe</p>
           <p className="mt-2 text-sm leading-relaxed text-fraca">
-            Quem entrar com o seu código ganha um mês grátis — e você também, assim que essa pessoa virar cliente.
+            Quem entrar com o seu código ganha um mês grátis, e você também, assim que essa pessoa virar cliente.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <span className="font-display flex-1 rounded-xl border border-dashed border-bordaforte bg-fundo2 px-4 py-3 text-center text-lg font-extrabold tracking-[0.2em] text-destaque">
@@ -166,7 +167,7 @@ export function Assinatura() {
               type="button"
               onClick={() => setCiclo(opcao)}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition-colors ${
-                ciclo === opcao ? 'bg-destaque text-[#04121f]' : 'text-fraca'
+                ciclo === opcao ? 'bg-superficie2 text-tinta' : 'text-tenue hover:text-fraca'
               }`}
             >
               {opcao}
@@ -179,47 +180,44 @@ export function Assinatura() {
         <p className="mt-2 text-xs font-semibold text-ok">No anual você paga 10 meses e usa 12.</p>
       )}
 
-      <div className="mt-3 space-y-3">
+      <div className="painel mt-3 divide-y divide-borda overflow-hidden rounded-2xl">
         {planos.map((plano) => {
           const atual = assinatura?.plano_id === plano.id && assinatura.status === 'ativa' && assinatura.ciclo === ciclo
           // Ninguém entra num plano menor do que a própria operação já é.
           const cabe = plano.limite_motoristas === null || motoristasCadastrados <= plano.limite_motoristas
+          const travado = atual || !cabe || indo !== ''
           return (
-            <div key={plano.id} className={`rounded-2xl p-4 ${atual ? 'painel border-l-2 border-l-ok' : 'painel'}`}>
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="font-display font-bold text-tinta">{plano.nome}</span>
-                <span className="font-display font-bold text-tinta tabular-nums">
-                  {moeda(precoDe(plano))}
-                  <span className="text-xs font-normal text-tenue">{ciclo === 'anual' ? ' /ano' : ' /mês'}</span>
+            <button
+              key={plano.id}
+              type="button"
+              disabled={travado}
+              onClick={() => void assinar(plano)}
+              className="flex w-full items-center gap-3 p-4 text-left transition-colors enabled:hover:bg-superficie2 disabled:cursor-default"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline gap-2">
+                  <span className="font-display font-bold text-tinta">{plano.nome}</span>
+                  {atual && <span className="text-xs font-semibold text-ok">seu plano</span>}
                 </span>
-              </div>
-              <p className="mt-1 text-sm text-fraca">{plano.descricao}</p>
-              <p className="mt-1 text-xs text-tenue">
-                {plano.limite_motoristas ? `Até ${plano.limite_motoristas} motoristas` : 'Motoristas à vontade'}
-              </p>
-              {!cabe && (
-                <p className="mt-2 text-xs text-atencao">
-                  Você tem {motoristasCadastrados} motoristas cadastrados. Para entrar neste plano, exclua os que
-                  sobram em Cadastros.
-                </p>
-              )}
-              <div className="mt-3">
-                <Botao
-                  largo
-                  tom={atual ? 'contorno' : 'principal'}
-                  disabled={atual || !cabe || indo !== ''}
-                  onClick={() => void assinar(plano)}
-                >
-                  {atual
-                    ? 'Seu plano atual'
-                    : !cabe
-                      ? 'Não cabe na sua operação'
-                      : indo === plano.id
-                        ? 'Abrindo o pagamento…'
-                        : 'Assinar'}
-                </Botao>
-              </div>
-            </div>
+                <span className="mt-0.5 block text-xs text-tenue">{porteDoPlano(plano.limite_motoristas)}</span>
+                {!cabe && (
+                  <span className="mt-1 block text-xs text-atencao">
+                    Não cabe: você tem {motoristasCadastrados} motoristas cadastrados.
+                  </span>
+                )}
+                {indo === plano.id && <span className="mt-1 block text-xs text-fraca">Abrindo o pagamento…</span>}
+              </span>
+
+              <span className="shrink-0 text-right">
+                <span className="font-display block font-bold text-tinta tabular-nums">{moeda(precoDe(plano))}</span>
+                <span className="text-xs text-tenue">{ciclo === 'anual' ? 'por ano' : 'por mês'}</span>
+              </span>
+
+              <Icone
+                nome="seta"
+                className={`h-4 w-4 shrink-0 ${travado ? 'text-transparent' : 'text-tenue'}`}
+              />
+            </button>
           )
         })}
       </div>

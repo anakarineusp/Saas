@@ -12,7 +12,7 @@ import {
   servicos as buscarServicos,
   linkDoServico,
 } from '../../dados'
-import { comoData, dataCurta, dataPorExtenso, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
+import { comoData, dataCurta, diaDaSemana, diaEMes, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
 
 const SIGLAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 import { abrirWhatsApp, mensagemParaMotorista } from '../../lib/whatsapp'
@@ -202,11 +202,9 @@ export function Hoje() {
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold tracking-[0.15em] text-tenue uppercase">
-            {dia === hojeISO() ? 'Hoje' : 'Agenda'}
+            {dia === hojeISO() ? 'Hoje' : 'Agenda'} · {diaDaSemana(dia)}
           </p>
-          <h1 className="font-display mt-0.5 truncate text-2xl font-extrabold text-tinta first-letter:uppercase">
-            {dataPorExtenso(dia)}
-          </h1>
+          <h1 className="font-display mt-0.5 text-2xl font-extrabold text-tinta">{diaEMes(dia)}</h1>
         </div>
 
         <label className="shrink-0 cursor-pointer rounded-lg border border-borda p-2 text-fraca hover:text-tinta">

@@ -9,15 +9,9 @@ import {
   ajustes as buscarAjustes, aplicarCupom, criarEmpresa, iniciarTesteComCartao, planos as buscarPlanos,
 } from '../../dados'
 import { moeda } from '../../lib/formato'
+import { porteDoPlano } from '../../lib/planos'
 import type { Plano } from '../../tipos'
 import { useSessao } from '../../sessao'
-
-/** Em uma linha, quanta gente cabe no plano. */
-function porteDoPlano(limite: number | null): string {
-  if (limite === null) return 'Motoristas à vontade, sem limite'
-  if (limite === 1) return 'Um motorista: você'
-  return `Até ${limite} motoristas`
-}
 
 /** Segundo passo do cadastro: o plano do teste e os dados da empresa. */
 export function SuaEmpresa() {

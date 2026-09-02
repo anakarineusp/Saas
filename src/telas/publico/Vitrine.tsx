@@ -7,6 +7,7 @@ import { Icone } from '../../componentes/Icone'
 import { Suporte } from '../../componentes/Suporte'
 import { conteudoDaVitrine, planos as buscarPlanos } from '../../dados'
 import { moeda } from '../../lib/formato'
+import { porteDoPlano } from '../../lib/planos'
 import { useRevelarAoRolar } from '../../lib/revelar'
 import type { Ciclo, Plano } from '../../tipos'
 import { VITRINE_PADRAO, type ConteudoDaVitrine } from '../../vitrine'
@@ -58,7 +59,7 @@ function TelaDoAplicativo() {
 
       <div className="mt-2 space-y-2 px-4">
         <div className="painel rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-[10px]">
+          <div className="flex items-center gap-1.5 text-[10px] whitespace-nowrap">
             <span className="font-display text-[13px] font-bold text-tinta tabular-nums">06:40</span>
             <span className="rounded bg-superficie2 px-1 py-0.5 text-fraca">Transfer IN</span>
             <span className="text-tenue">5 pax</span>
@@ -78,7 +79,7 @@ function TelaDoAplicativo() {
         </div>
 
         <div className="painel rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-[10px]">
+          <div className="flex items-center gap-1.5 text-[10px] whitespace-nowrap">
             <span className="font-display text-[13px] font-bold text-tinta tabular-nums">14:20</span>
             <span className="rounded bg-superficie2 px-1 py-0.5 text-fraca">Passeio</span>
             <span className="text-tenue">2 pax</span>
@@ -94,23 +95,26 @@ function TelaDoAplicativo() {
             <span className="font-display text-[12px] font-bold text-tinta tabular-nums">R$ 690,00</span>
           </div>
         </div>
+
+        <div className="painel rounded-xl p-3">
+          <div className="flex items-center gap-1.5 text-[10px] whitespace-nowrap">
+            <span className="font-display text-[13px] font-bold text-tinta tabular-nums">19:05</span>
+            <span className="rounded bg-superficie2 px-1 py-0.5 text-fraca">Transfer OUT</span>
+            <span className="text-tenue">3 pax</span>
+            <span className="ml-auto flex items-center gap-1 text-fraca">
+              <span className="h-1 w-1 rounded-full bg-fraca" />
+              Aguardando
+            </span>
+          </div>
+          <p className="mt-1.5 text-[12px] font-semibold text-tinta">Sra. Kubitschek</p>
+          <p className="text-[10px] text-fraca">Hotel Ritta Höppner → Salgado Filho</p>
+          <div className="mt-2 flex items-center justify-between border-t border-borda pt-2 text-[10px]">
+            <span className="text-fraca">Luciane · Onix</span>
+            <span className="font-display text-[12px] font-bold text-tinta tabular-nums">R$ 520,00</span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-auto flex border-t border-borda pt-2 pb-3 text-[9px]">
-        {[
-          { nome: 'Hoje', icone: 'calendario' as const, ativa: true },
-          { nome: 'Acerto', icone: 'grafico' as const },
-          { nome: 'Cadastros', icone: 'lista' as const },
-        ].map((aba) => (
-          <span
-            key={aba.nome}
-            className={`flex flex-1 flex-col items-center gap-1 ${aba.ativa ? 'text-destaque' : 'text-tenue'}`}
-          >
-            <Icone nome={aba.icone} className="h-3.5 w-3.5" />
-            {aba.nome}
-          </span>
-        ))}
-      </div>
     </div>
   )
 }
@@ -118,8 +122,8 @@ function TelaDoAplicativo() {
 /** A moldura do aparelho. */
 function Celular() {
   return (
-    <div className="w-[260px] rounded-[2rem] border border-bordaforte bg-fundo2 p-1.5 shadow-2xl shadow-black/40 sm:w-[290px]">
-      <div className="relative h-[520px] overflow-hidden rounded-[1.6rem] border border-borda sm:h-[560px]">
+    <div className="w-[275px] rounded-[2rem] border border-bordaforte bg-fundo2 p-1.5 shadow-2xl shadow-black/40 sm:w-[310px]">
+      <div className="relative h-[540px] overflow-hidden rounded-[1.6rem] border border-borda sm:h-[620px]">
         <span className="absolute top-2 left-1/2 z-10 h-1 w-14 -translate-x-1/2 rounded-full bg-bordaforte" />
         <TelaDoAplicativo />
       </div>
@@ -179,13 +183,6 @@ export function Vitrine() {
 
   const economiaDe = (p: Plano) => p.preco_centavos * 12 - (p.preco_anual_centavos ?? p.preco_centavos * 10)
 
-  const porte = (p: Plano) =>
-    p.limite_motoristas === null
-      ? 'Motoristas sem limite'
-      : p.limite_motoristas === 1
-        ? 'Um motorista: você'
-        : `Até ${p.limite_motoristas} motoristas`
-
   return (
     <div className="min-h-screen bg-fundo" style={estilo}>
       <header className="sticky top-0 z-30 border-b border-borda bg-fundo/90 backdrop-blur">
@@ -207,14 +204,16 @@ export function Vitrine() {
       </header>
 
       {/* ------------------------------------------------------------ abertura */}
+      {/* No celular a ordem é texto, aparelho e argumentos: a tela do produto
+          precisa aparecer cedo. No computador tudo isso convive lado a lado. */}
       <section className="overflow-hidden border-b border-borda">
-        <div className="mx-auto grid max-w-6xl gap-10 px-5 pt-14 sm:pt-20 lg:grid-cols-[1.05fr_auto] lg:items-end lg:gap-16">
-          <div className="pb-14 sm:pb-20">
+        <div className="mx-auto grid max-w-6xl gap-10 px-5 pt-14 sm:pt-20 lg:grid-cols-[1.05fr_auto] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:gap-y-12">
+          <div className="lg:col-start-1 lg:row-start-1">
             <p className="entra text-[11px] font-semibold tracking-[0.18em] text-tenue uppercase">
               {c.topo.etiqueta}
             </p>
 
-            <h1 className="entra atraso-1 font-display mt-5 text-[2.6rem] leading-[0.98] font-extrabold text-balance sm:text-6xl lg:text-[4.2rem]">
+            <h1 className="entra atraso-1 font-display mt-5 text-[2.6rem] leading-[0.98] font-extrabold text-balance sm:text-6xl lg:text-[4.5rem]">
               {c.topo.titulo_1}
               <br />
               {c.topo.titulo_2}
@@ -241,13 +240,26 @@ export function Vitrine() {
           </div>
 
           {/* A tela de verdade, cortada pela dobra: mostrar vale mais que descrever. */}
-          <div className="entra atraso-5 -mb-24 flex justify-center lg:-mb-32 lg:justify-end">
+          <div className="entra atraso-5 -mb-20 flex justify-center lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:-mb-24 lg:justify-end lg:self-end">
             {c.topo.imagem ? (
               <img src={c.topo.imagem} alt="" className="w-full max-w-sm rounded-2xl border border-borda object-cover" />
             ) : (
               <Celular />
             )}
           </div>
+
+          <dl className="entra atraso-5 grid gap-6 border-t border-borda pt-6 pb-14 sm:grid-cols-3 sm:gap-8 lg:col-start-1 lg:row-start-2 lg:pb-20">
+            {[
+              ['20 segundos', 'para lançar um serviço e mandar para o motorista'],
+              ['Nenhum aplicativo', 'o motorista abre um link e responde ali mesmo'],
+              ['Zero planilha', 'o acerto do mês fica pronto sozinho'],
+            ].map(([titulo, texto]) => (
+              <div key={titulo}>
+                <dt className="font-display font-bold text-tinta">{titulo}</dt>
+                <dd className="mt-1 text-sm leading-relaxed text-fraca">{texto}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -360,7 +372,7 @@ export function Vitrine() {
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-display text-lg font-bold text-tinta">{plano.nome}</h3>
-                  <span className="text-xs text-tenue">{porte(plano)}</span>
+                  <span className="text-xs text-tenue">{porteDoPlano(plano.limite_motoristas)}</span>
                 </div>
                 <p className="mt-2 min-h-10 text-sm leading-relaxed text-fraca">{plano.descricao}</p>
 

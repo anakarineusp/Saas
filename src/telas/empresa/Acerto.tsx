@@ -10,28 +10,15 @@ import {
 import { useSessao } from '../../sessao'
 import type { Indicador, Motorista, Servico } from '../../tipos'
 
-function Numero({
-  rotulo,
-  valor,
-  tom = 'normal',
-  dica,
-}: {
-  rotulo: string
-  valor: string
-  tom?: 'normal' | 'destaque' | 'saida'
-  dica?: string
-}) {
-  const estilos = {
-    normal: 'painel',
-    destaque: 'painel border-l-2 border-l-destaque',
-    saida: 'painel',
-  }
-  const cor = tom === 'destaque' ? 'text-destaque' : tom === 'saida' ? 'text-fraca' : 'text-tinta'
+/** Uma linha do extrato do mês. */
+function LinhaDaConta({ rotulo, valor, sinal }: { rotulo: string; valor: string; sinal?: '-' }) {
   return (
-    <div className={`rounded-2xl p-4 ${estilos[tom]}`}>
-      <p className="text-xs text-tenue">{rotulo}</p>
-      <p className={`font-display mt-1 text-xl font-bold tabular-nums ${cor}`}>{valor}</p>
-      {dica && <p className="mt-0.5 text-[11px] text-tenue">{dica}</p>}
+    <div className="flex items-baseline justify-between gap-4 py-2.5">
+      <span className="text-sm text-fraca">{rotulo}</span>
+      <span className="font-display text-sm font-semibold text-tinta tabular-nums">
+        {sinal === '-' ? '− ' : ''}
+        {valor}
+      </span>
     </div>
   )
 }
@@ -111,50 +98,62 @@ export function Acerto() {
 
   return (
     <div className="px-5 pt-6">
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          aria-label="Mês anterior"
-          onClick={() => setMes(mesVizinho(mes, -1))}
-          className="rounded-xl border border-borda bg-superficie px-3 py-2 text-fraca hover:text-tinta"
-        >
-          ‹
-        </button>
-        <h1 className="font-display text-lg font-bold text-tinta first-letter:uppercase">{mesPorExtenso(mes)}</h1>
-        <button
-          type="button"
-          aria-label="Próximo mês"
-          onClick={() => setMes(mesVizinho(mes, 1))}
-          className="rounded-xl border border-borda bg-superficie px-3 py-2 text-fraca hover:text-tinta"
-        >
-          ›
-        </button>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-extrabold text-tinta first-letter:uppercase">
+          {mesPorExtenso(mes)}
+        </h1>
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            aria-label="Mês anterior"
+            onClick={() => setMes(mesVizinho(mes, -1))}
+            className="rounded-lg border border-borda px-3 py-1.5 text-fraca hover:border-bordaforte hover:text-tinta"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Próximo mês"
+            onClick={() => setMes(mesVizinho(mes, 1))}
+            className="rounded-lg border border-borda px-3 py-1.5 text-fraca hover:border-bordaforte hover:text-tinta"
+          >
+            ›
+          </button>
+        </div>
       </div>
 
       <div className="mt-4">
         <Erro>{erro}</Erro>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Numero
-          rotulo="Faturado"
-          valor={moeda(faturado)}
-          dica={`${moeda(jaRodou)} já concluído`}
-        />
-        {!solo && <Numero rotulo="A pagar aos motoristas" valor={moeda(aPagar)} tom="saida" />}
-        <Numero rotulo="Comissões de indicação" valor={moeda(comissoes)} tom="saida" />
-        <Numero
-          rotulo={solo ? 'Fica com você' : 'Sobra para a empresa'}
-          valor={moeda(sobra)}
-          tom="destaque"
-          dica={faturado > 0 ? `${margem}% do faturado` : undefined}
-        />
+      {/* O número que interessa primeiro, e embaixo dele a conta que o formou. */}
+      <p className="mt-6 text-xs font-bold tracking-[0.15em] text-tenue uppercase">
+        {solo ? 'Fica com você' : 'Sobra para a empresa'}
+      </p>
+      <p className="font-display mt-1 text-[2.75rem] leading-none font-extrabold text-tinta tabular-nums">
+        {moeda(sobra)}
+      </p>
+      <p className="mt-2 text-sm text-tenue">
+        {faturado > 0 ? `${margem}% do faturado` : 'Nenhum serviço neste mês'}
+        {jaRodou > 0 && ` · ${moeda(jaRodou)} já concluído`}
+      </p>
+
+      <div className="painel mt-5 rounded-2xl px-4 py-1">
+        <LinhaDaConta rotulo="Faturado" valor={moeda(faturado)} />
+        {!solo && <LinhaDaConta rotulo="A pagar aos motoristas" valor={moeda(aPagar)} sinal="-" />}
+        <LinhaDaConta rotulo="Comissões de indicação" valor={moeda(comissoes)} sinal="-" />
       </div>
 
       {!solo && <p className="mt-6 mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Motoristas</p>}
-      <div className={solo ? 'hidden' : 'space-y-2'}>
+      <div
+        className={
+          solo || porMotorista.length === 0
+            ? 'hidden'
+            : 'painel divide-y divide-borda overflow-hidden rounded-2xl'
+        }
+      >
         {porMotorista.map(({ motorista, servicos: meus, total }) => (
-          <div key={motorista.id} className="painel overflow-hidden rounded-2xl">
+          <div key={motorista.id}>
             <button
               type="button"
               onClick={() => setAberto(aberto === motorista.id ? null : motorista.id)}
@@ -190,15 +189,17 @@ export function Acerto() {
             )}
           </div>
         ))}
-        {porMotorista.length === 0 && <Vazio titulo="Nenhum serviço com motorista neste mês" />}
       </div>
+      {!solo && porMotorista.length === 0 && (
+        <Vazio titulo="Nenhum serviço com motorista neste mês" />
+      )}
 
       {porIndicador.length > 0 && (
         <>
           <p className="mt-6 mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Indicadores</p>
-          <div className="space-y-2">
+          <div className="painel divide-y divide-borda overflow-hidden rounded-2xl">
             {porIndicador.map(({ indicador, quantidade, total }) => (
-              <div key={indicador.id} className="painel flex items-center justify-between gap-3 rounded-2xl p-4">
+              <div key={indicador.id} className="flex items-center justify-between gap-3 p-4">
                 <span>
                   <span className="block font-semibold text-tinta">{indicador.nome}</span>
                   <span className="block text-xs text-tenue">

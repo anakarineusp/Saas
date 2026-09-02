@@ -51,23 +51,31 @@ function Linha({
   acoes?: React.ReactNode
 }) {
   return (
-    <div className="painel rounded-2xl">
-      <div className="flex items-center gap-2 p-4">
-        <button type="button" onClick={aoEditar} className="min-w-0 flex-1 text-left">
-          <span className="block truncate font-semibold text-tinta">{titulo}</span>
-          <span className="block truncate text-xs text-tenue">{detalhe}</span>
-        </button>
-        {direita && (
-          <span className="shrink-0 font-display text-sm font-bold text-tinta tabular-nums">{direita}</span>
-        )}
-        {acoes}
+    <div>
+      <div className="px-4 py-3.5">
+        <div className="flex items-start gap-2">
+          <button type="button" onClick={aoEditar} className="min-w-0 flex-1 text-left">
+            <span className="block truncate font-semibold text-tinta">{titulo}</span>
+          </button>
+          {acoes}
+          <button
+            type="button"
+            onClick={aoExcluir}
+            aria-label="Excluir"
+            className="-mt-1 shrink-0 rounded-full p-1.5 text-tenue transition-colors hover:bg-alerta/10 hover:text-alerta"
+          >
+            <Icone nome="lixeira" className="h-4 w-4" />
+          </button>
+        </div>
         <button
           type="button"
-          onClick={aoExcluir}
-          aria-label="Excluir"
-          className="shrink-0 rounded-full p-2 text-tenue transition-colors hover:bg-alerta/10 hover:text-alerta"
+          onClick={aoEditar}
+          className="mt-0.5 flex w-full items-baseline gap-3 text-left"
         >
-          <Icone nome="lixeira" className="h-4.5 w-4.5" />
+          <span className="min-w-0 flex-1 truncate text-xs text-tenue">{detalhe}</span>
+          {direita && (
+            <span className="font-display shrink-0 text-sm font-bold text-tinta tabular-nums">{direita}</span>
+          )}
         </button>
       </div>
       {extra}
@@ -418,6 +426,13 @@ export function Cadastros() {
   const servicosFiltrados = filtrar(servicos, (s) => `${s.passageiro} ${s.origem} ${s.destino} ${s.voo ?? ''}`)
   const rotasFiltradas = filtrar(rotas, (r) => `${r.nome} ${r.origem} ${r.destino}`)
 
+  const quantasLinhas = {
+    motoristas: motoristasFiltrados.length,
+    indicadores: indicadoresFiltrados.length,
+    servicos: servicosFiltrados.length,
+    rotas: rotasFiltradas.length,
+  }[secao]
+
   if (carregando) return <Carregando />
 
   return (
@@ -443,7 +458,7 @@ export function Cadastros() {
         </div>
       )}
 
-      <div className="mt-4 flex gap-1 overflow-x-auto rounded-xl border border-borda bg-superficie p-1">
+      <div className="mt-5 flex gap-5 overflow-x-auto border-b border-borda">
         {(solo ? SECOES_SOLO : SECOES).map((s) => (
           <button
             key={s.id}
@@ -452,8 +467,9 @@ export function Cadastros() {
               setSecao(s.id)
               setProcura('')
             }}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-              secao === s.id ? 'bg-destaque text-[#04121f]' : 'text-fraca hover:text-tinta'
+            aria-current={secao === s.id ? 'page' : undefined}
+            className={`-mb-px shrink-0 border-b-2 pb-2.5 text-[13px] font-semibold transition-colors ${
+              secao === s.id ? 'border-destaque text-tinta' : 'border-transparent text-tenue hover:text-fraca'
             }`}
           >
             {s.rotulo}
@@ -477,7 +493,7 @@ export function Cadastros() {
         )}
       </div>
 
-      <div className="mt-4 space-y-2">
+      <div className={`mt-4 divide-y divide-borda overflow-hidden rounded-2xl ${quantasLinhas > 0 ? 'painel' : ''}`}>
         {secao === 'motoristas' &&
           motoristasFiltrados.map((m) => (
             <Linha
@@ -538,8 +554,8 @@ export function Cadastros() {
           servicosFiltrados.map((s) => (
             <Linha
               key={s.id}
-              titulo={`${dataCurta(s.data)} ${hora(s.hora)} · ${s.passageiro}`}
-              detalhe={`${rotuloTipo(s.tipo)} · ${s.origem} → ${s.destino}`}
+              titulo={s.passageiro}
+              detalhe={`${dataCurta(s.data)} ${hora(s.hora)} · ${rotuloTipo(s.tipo)} · ${s.origem} → ${s.destino}`}
               direita={moeda(s.valor_centavos)}
               aoEditar={() => setEditando({ tipo: 'servicos', item: s })}
               aoExcluir={() => {
@@ -574,6 +590,9 @@ export function Cadastros() {
             />
           ))}
 
+      </div>
+
+      <div className="mt-4">
         {((secao === 'motoristas' && motoristasFiltrados.length === 0) ||
           (secao === 'indicadores' && indicadoresFiltrados.length === 0) ||
           (secao === 'servicos' && servicosFiltrados.length === 0) ||

@@ -57,9 +57,15 @@ function Indicador({
   destaque?: boolean
 }) {
   return (
-    <div className={`rounded-2xl p-4 ${destaque ? 'painel border-l-2 border-l-destaque' : 'painel'}`}>
+    <div className="bg-fundo p-4">
       <p className="text-xs text-tenue">{rotulo}</p>
-      <p className="font-display mt-1 text-xl font-bold text-tinta tabular-nums">{valor}</p>
+      <p
+        className={`font-display mt-1 font-bold tabular-nums ${
+          destaque ? 'text-2xl text-destaque' : 'text-xl text-tinta'
+        }`}
+      >
+        {valor}
+      </p>
       {variacao !== undefined && variacao !== null && (
         <p className={`mt-0.5 text-[11px] font-semibold ${variacao >= 0 ? 'text-ok' : 'text-alerta'}`}>
           {variacao >= 0 ? '+' : ''}
@@ -390,14 +396,15 @@ export function Painel() {
         <Erro>{erro}</Erro>
       </div>
 
-      <div className="mt-5 flex gap-1 overflow-x-auto rounded-xl border border-borda bg-superficie p-1">
+      <div className="mt-5 flex gap-6 overflow-x-auto border-b border-borda">
         {ABAS.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setAba(item.id)}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-              aba === item.id ? 'bg-superficie2 text-tinta' : 'text-tenue hover:text-fraca'
+            aria-current={aba === item.id ? 'page' : undefined}
+            className={`-mb-px shrink-0 border-b-2 pb-2.5 text-sm font-semibold whitespace-nowrap transition-colors ${
+              aba === item.id ? 'border-destaque text-tinta' : 'border-transparent text-tenue hover:text-fraca'
             }`}
           >
             {item.rotulo}
@@ -410,7 +417,7 @@ export function Painel() {
         <div className="mt-5 space-y-5">
           <div>
             <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Dinheiro</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-borda bg-borda sm:grid-cols-4">
               <Indicador
                 rotulo="Receita recorrente"
                 valor={moeda(indicadores.recorrente_centavos)}
@@ -431,7 +438,7 @@ export function Painel() {
 
           <div>
             <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Clientes</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-borda bg-borda sm:grid-cols-4">
               <Indicador rotulo="Assinantes" valor={String(indicadores.assinantes)} />
               <Indicador rotulo="Em teste" valor={String(indicadores.em_teste)} dica={`${indicadores.testes_vencidos} venceram`} />
               <Indicador
@@ -445,7 +452,7 @@ export function Painel() {
 
           <div>
             <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Saúde do negócio</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-borda bg-borda sm:grid-cols-4">
               <Indicador
                 rotulo="Vira cliente"
                 valor={`${indicadores.conversao_porcento}%`}
@@ -463,7 +470,7 @@ export function Painel() {
 
           <div>
             <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">Uso do sistema</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-borda bg-borda sm:grid-cols-4">
               <Indicador rotulo="Empresas cadastradas" valor={String(indicadores.empresas)} />
               <Indicador rotulo="Motoristas" valor={String(indicadores.motoristas_no_sistema)} />
               <Indicador rotulo="Serviços lançados" valor={String(indicadores.servicos_no_sistema)} />
