@@ -217,7 +217,7 @@ export function EditorDaVitrine() {
           <Campo rotulo="Título, primeira linha">
             <Entrada value={c.topo.titulo_1} onChange={(e) => mudar('topo', { ...c.topo, titulo_1: e.target.value })} />
           </Campo>
-          <Campo rotulo="Título, segunda linha" dica="Esta sai na cor de destaque.">
+          <Campo rotulo="Título, segunda linha" dica="Sai logo abaixo da primeira, do mesmo tamanho.">
             <Entrada value={c.topo.titulo_2} onChange={(e) => mudar('topo', { ...c.topo, titulo_2: e.target.value })} />
           </Campo>
         </div>

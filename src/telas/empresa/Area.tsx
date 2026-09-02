@@ -26,22 +26,22 @@ export function Area() {
 
   const aviso =
     assinatura && !assinatura.pode_usar
-      ? { cor: 'painel border-l-2 border-l-alerta text-tinta', texto: 'Seu teste terminou. Escolha um plano para voltar a lançar serviços.' }
+      ? { cor: 'border-borda bg-alerta/10 text-tinta', texto: 'Seu teste terminou. Escolha um plano para voltar a lançar serviços.' }
       : assinatura?.status === 'atrasada'
-        ? { cor: 'painel border-l-2 border-l-atencao text-tinta', texto: 'Há um pagamento em atraso na sua assinatura.' }
+        ? { cor: 'border-borda bg-atencao/10 text-tinta', texto: 'Há um pagamento em atraso na sua assinatura.' }
         : assinatura?.status === 'teste'
           ? {
               cor:
                 assinatura.dias_de_teste <= 2
-                  ? 'painel border-l-2 border-l-atencao text-tinta'
-                  : 'painel text-fraca',
+                  ? 'border-borda bg-atencao/10 text-tinta'
+                  : 'border-borda bg-superficie text-fraca',
               texto: `Teste grátis: ${assinatura.dias_de_teste} ${assinatura.dias_de_teste === 1 ? 'dia restante' : 'dias restantes'}.`,
             }
           : null
 
   return (
     <div className="mx-auto min-h-screen max-w-md pb-28">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-borda/60 bg-fundo/85 px-4 py-3 backdrop-blur-lg">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-borda bg-fundo/85 px-4 py-3 backdrop-blur-lg">
         <span className="min-w-0 truncate font-display text-sm font-bold text-tinta">
           {assinatura?.empresa ?? perfil?.nome}
         </span>
@@ -58,13 +58,14 @@ export function Area() {
         </div>
       </header>
 
+      {/* Faixa fina, colada no cabeçalho: avisa sem virar mais uma caixa. */}
       {aviso && (
         <Link
           to="/app/assinatura"
-          className={`mx-4 mt-3 flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${aviso.cor}`}
+          className={`flex items-center justify-between gap-3 border-b px-5 py-2 text-xs font-semibold ${aviso.cor}`}
         >
           <span>{aviso.texto}</span>
-          <Icone nome="seta" className="h-4 w-4 shrink-0 opacity-70" />
+          <Icone nome="seta" className="h-3.5 w-3.5 shrink-0 opacity-70" />
         </Link>
       )}
 
@@ -92,7 +93,7 @@ export function Area() {
               {({ isActive }) => (
                 <>
                   {isActive && (
-                    <span className="absolute top-0 h-0.5 w-10 rounded-full bg-destaque shadow-[0_0_12px_var(--c-destaque)]" />
+                    <span className="absolute top-0 h-0.5 w-10 rounded-full bg-destaque" />
                   )}
                   <Icone nome={aba.icone} className="h-5.5 w-5.5" traco={isActive ? 2.2 : 1.7} />
                   {aba.rotulo}
