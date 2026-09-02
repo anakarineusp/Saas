@@ -12,7 +12,7 @@ import {
   servicos as buscarServicos,
   linkDoServico,
 } from '../../dados'
-import { comoData, dataCurta, diaDaSemana, diaEMes, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
+import { comoData, diaDaSemana, diaEMes, hora, hojeISO, moeda, paraISO, rotuloTipo } from '../../lib/formato'
 
 const SIGLAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 import { abrirWhatsApp, mensagemParaMotorista } from '../../lib/whatsapp'
@@ -358,7 +358,7 @@ export function Hoje() {
       <Folha
         aberta={servico !== null}
         aoFechar={() => setAberto(null)}
-        titulo={servico ? `${dataCurta(servico.data)} às ${hora(servico.hora)}` : ''}
+        titulo={servico ? servico.passageiro : ''}
       >
         {servico && (
           <Atribuir

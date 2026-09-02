@@ -24,6 +24,43 @@ const PONTO = {
   nao_cabe: 'bg-alerta',
 }
 
+/** Uma linha de ficha: o que é à esquerda, o que vale à direita. */
+function Dado({ rotulo, valor, forte }: { rotulo: string; valor: string; forte?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+      <span className="shrink-0 text-sm text-tenue">{rotulo}</span>
+      <span
+        className={`text-right text-sm ${
+          forte ? 'font-display font-bold text-tinta tabular-nums' : 'font-medium text-tinta'
+        }`}
+      >
+        {valor}
+      </span>
+    </div>
+  )
+}
+
+/** Ação secundária: uma linha da lista, não um botão gordo. */
+function LinhaDeAcao({
+  rotulo, aoTocar, desativada,
+}: {
+  rotulo: string
+  aoTocar: () => void
+  desativada?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      disabled={desativada}
+      onClick={aoTocar}
+      className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-sm font-semibold text-tinta transition-colors enabled:hover:bg-superficie2 disabled:opacity-40"
+    >
+      {rotulo}
+      <Icone nome="seta" className="h-4 w-4 shrink-0 text-tenue" />
+    </button>
+  )
+}
+
 export function Atribuir({
   servico,
   servicos,
@@ -48,6 +85,7 @@ export function Atribuir({
   const motorista = motoristas.find((m) => m.id === servico.motorista_id) ?? null
   const indicador = indicadores.find((i) => i.id === servico.indicador_id) ?? null
   const encerrado = servico.status === 'cancelado' || servico.status === 'concluido'
+  const temAcoes = servico.status !== 'cancelado' || encerrado
 
   async function tentar(acao: () => Promise<unknown>, recado?: string) {
     setErro('')
@@ -129,42 +167,32 @@ export function Atribuir({
 
   return (
     <div className="space-y-4">
-      <div className="painel rounded-2xl p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-display font-bold text-tinta">
-              {dataCurta(servico.data)} às {hora(servico.hora)}
-            </span>
-            <span className="rounded-md bg-superficie2 px-1.5 py-0.5 text-xs font-medium text-fraca">
-              {rotuloTipo(servico.tipo)}
-            </span>
-          </div>
-          <EtiquetaDeStatus status={servico.status} />
-        </div>
-        <p className="mt-2 font-semibold text-tinta">
-          {servico.passageiro} <span className="font-normal text-tenue">· {servico.pax} pax</span>
+      {/* O serviço em forma de ficha: rótulo à esquerda, valor à direita.
+          É o mesmo formato que o motorista e o hotel veem no link. */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-display font-bold text-tinta">
+          {dataCurta(servico.data)} às {hora(servico.hora)}
         </p>
-        {servico.voo && <p className="text-sm text-fraca">Voo {servico.voo}</p>}
-        <p className="mt-1 text-sm text-fraca">
-          {servico.origem} <span className="text-tenue">→</span> {servico.destino}
-        </p>
-        <div className="mt-3 flex justify-between border-t border-borda pt-3 text-sm">
-          <span className="text-tenue">{indicador ? indicador.nome : 'Sem indicação'}</span>
-          <span className="font-display font-bold text-tinta tabular-nums">{moeda(servico.valor_centavos)}</span>
-        </div>
-        {servico.motivo && (
-          <p className="mt-3 text-xs text-alerta">Motivo: {servico.motivo}</p>
-        )}
+        <EtiquetaDeStatus status={servico.status} />
+      </div>
+
+      <div className="painel divide-y divide-borda overflow-hidden rounded-2xl">
+        <Dado rotulo="Serviço" valor={`${rotuloTipo(servico.tipo)} · ${servico.pax} pax`} />
+        {servico.voo && <Dado rotulo="Voo" valor={servico.voo} />}
+        <Dado rotulo="Buscar" valor={servico.origem} />
+        <Dado rotulo="Levar" valor={servico.destino} />
+        <Dado rotulo="Indicação" valor={indicador ? `${indicador.nome} · ${indicador.comissao}%` : 'Sem indicação'} />
+        <Dado rotulo="Valor" valor={moeda(servico.valor_centavos)} forte />
+        {servico.motivo && <Dado rotulo="Motivo" valor={servico.motivo} />}
       </div>
 
       <Erro>{erro}</Erro>
 
       {motorista && !encerrado && (
-        <div className="painel space-y-3 rounded-2xl p-4">
-          <div className="flex items-baseline justify-between gap-2">
+        <div className="space-y-3">
+          <div className="painel flex items-baseline justify-between gap-2 rounded-2xl p-4">
             <span className="font-display font-bold text-tinta">
-              {solo ? 'Você' : motorista.nome}{' '}
-              <span className="font-normal text-fraca">· {motorista.veiculo}</span>
+              {solo ? 'Você' : motorista.nome} <span className="font-normal text-fraca">· {motorista.veiculo}</span>
             </span>
             {!solo && (
               <span className="font-display text-sm font-bold text-tinta tabular-nums">
@@ -185,65 +213,49 @@ export function Atribuir({
               </Botao>
             </div>
           )}
-
-          <Botao
-            tom="contorno"
-            largo
-            disabled={!indicador}
-            onClick={() =>
-              indicador && abrirWhatsApp(indicador.telefone ?? '', mensagemParaIndicador(servico, indicador))
-            }
-          >
-            Avisar {indicador ? indicador.nome : 'indicador'}
-          </Botao>
-
-
-          {(servico.status === 'confirmado' || servico.status === 'atribuido') && (
-            <Botao
-              tom="fantasma"
-              largo
-              disabled={indo}
-              onClick={() => void tentar(() => concluirServico(servico.id), 'Serviço concluído')}
-            >
-              <Icone nome="check" className="h-4 w-4" />
-              Marcar como concluído
-            </Botao>
-          )}
         </div>
       )}
 
-      {servico.status !== 'cancelado' && (
-        <Botao tom="contorno" largo onClick={() => void mandarAcompanhamento()}>
-          <Icone nome="seta" className="h-4 w-4" />
-          Link de acompanhamento do passageiro
-        </Botao>
-      )}
-
-      {servico.status === 'concluido' && (
-        <Botao tom="ok" largo onClick={() => void pedirAvaliacao()}>
-          <Icone nome="whatsapp" className="h-4 w-4" />
-          Pedir avaliação ao passageiro
-        </Botao>
-      )}
-
-      {encerrado && (
-        <Botao
-          tom="contorno"
-          largo
-          disabled={indo}
-          onClick={() => void tentar(() => reabrirServico(servico.id), 'Serviço reaberto')}
-        >
-          <Icone nome="volta" className="h-4 w-4" />
-          Reabrir o serviço
-        </Botao>
-      )}
+      {/* O resto das ações vira lista: um botão gordo para cada coisa vira ruído. */}
+      <div
+        className={
+          temAcoes ? 'painel divide-y divide-borda overflow-hidden rounded-2xl' : 'hidden'
+        }
+      >
+        {motorista && !encerrado && indicador && (
+          <LinhaDeAcao
+            rotulo={`Avisar ${indicador.nome}`}
+            aoTocar={() => abrirWhatsApp(indicador.telefone ?? '', mensagemParaIndicador(servico, indicador))}
+          />
+        )}
+        {servico.status !== 'cancelado' && (
+          <LinhaDeAcao rotulo="Link de acompanhamento do passageiro" aoTocar={() => void mandarAcompanhamento()} />
+        )}
+        {motorista && (servico.status === 'confirmado' || servico.status === 'atribuido') && (
+          <LinhaDeAcao
+            rotulo="Marcar como concluído"
+            desativada={indo}
+            aoTocar={() => void tentar(() => concluirServico(servico.id), 'Serviço concluído')}
+          />
+        )}
+        {servico.status === 'concluido' && (
+          <LinhaDeAcao rotulo="Pedir avaliação ao passageiro" aoTocar={() => void pedirAvaliacao()} />
+        )}
+        {encerrado && (
+          <LinhaDeAcao
+            rotulo="Reabrir o serviço"
+            desativada={indo}
+            aoTocar={() => void tentar(() => reabrirServico(servico.id), 'Serviço reaberto')}
+          />
+        )}
+      </div>
 
       {!encerrado && !solo && (
         <div>
           <p className="mb-2 text-xs font-bold tracking-[0.15em] text-tenue uppercase">
             {motorista ? 'Trocar motorista' : 'Escolher motorista'}
           </p>
-          <div className="space-y-2">
+          <div className="painel divide-y divide-borda overflow-hidden rounded-2xl">
             {motoristas.map((m) => {
               const disp = disponibilidadeDe(m, servico, servicos)
               const rotulo =
@@ -258,15 +270,18 @@ export function Atribuir({
                   type="button"
                   disabled={disp.estado === 'nao_cabe' || indo}
                   onClick={() => void escolher(m)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-colors disabled:opacity-40 ${
-                    m.id === servico.motorista_id
-                      ? 'border-destaque bg-superficie2'
-                      : 'border-borda bg-superficie hover:border-bordaforte'
+                  className={`flex w-full items-center justify-between gap-3 p-4 text-left transition-colors disabled:opacity-40 ${
+                    m.id === servico.motorista_id ? 'bg-superficie2' : 'hover:bg-superficie2'
                   }`}
                 >
-                  <span>
-                    <span className="block font-semibold text-tinta">{m.nome}</span>
-                    <span className="block text-xs text-tenue">
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-tinta">
+                      {m.nome}
+                      {m.id === servico.motorista_id && (
+                        <span className="ml-2 text-xs font-semibold text-destaque">escalado</span>
+                      )}
+                    </span>
+                    <span className="block truncate text-xs text-tenue">
                       {m.veiculo} · {m.lugares} lugares · {m.percentual}%
                     </span>
                   </span>
@@ -278,7 +293,7 @@ export function Atribuir({
               )
             })}
             {motoristas.length === 0 && (
-              <p className="text-sm text-tenue">Cadastre um motorista na aba Cadastros.</p>
+              <p className="p-4 text-sm text-tenue">Cadastre um motorista na aba Cadastros.</p>
             )}
           </div>
         </div>

@@ -29,6 +29,16 @@ for arquivo in "$RAIZ"/supabase/local/*.sql "$RAIZ"/supabase/migrations/*.sql; d
 done
 
 mkdir -p "$FOTOS"
+
+# Se já tem alguém atendendo nessas portas, o teste conversaria com o banco
+# errado e acusaria erro onde não tem. Melhor parar e avisar.
+for porta in 54321 5173; do
+  if curl -s -m 2 -o /dev/null "http://localhost:$porta"; then
+    echo "A porta $porta já está ocupada. Feche o que está rodando nela e tente de novo."
+    exit 1
+  fi
+done
+
 node "$RAIZ/ferramentas/servidor-local/index.mjs" 54321 "$BANCO" > /tmp/servidor-local.log 2>&1 &
 SERVIDOR=$!
 # MODO=producao testa o site já construído, do jeitinho que vai para o ar.
